@@ -1,0 +1,110 @@
+#lang pollen
+
+index.html
+toc.html
+foreword.html
+introduction.html
+
+◊why-typography-matters.html{
+                             what-is-typography.html
+                             who-is-typography-for.html
+                             why-does-typography-matter.html
+                             what-is-good-typography.html
+                             where-do-the-rules-come-from.html}
+◊type-composition.html{
+                       ◊; basic
+                       straight-and-curly-quotes.html
+                       one-space-between-sentences.html
+                       paragraph-and-section-marks.html
+                       hyphens-and-dashes.html
+                       ampersands.html
+                       signature-lines.html
+                       trademark-and-copyright-symbols.html
+                       ellipses.html
+                       
+                       ◊; advanced
+                       apostrophes.html
+                       accented-characters.html
+                       foot-and-inch-marks.html
+                       white-space-characters.html
+                       word-spaces.html
+                       nonbreaking-spaces.html
+                       tabs-and-tab-stops.html
+                       hard-line-breaks.html
+                       carriage-returns.html
+                       hard-page-breaks.html
+                       optional-hyphens.html
+                       math-symbols.html
+                       ligatures.html}
+◊text-formatting.html{
+                      ◊; basic
+                      underlining.html
+                      goofy-fonts.html
+                      monospaced-fonts.html
+                      system-fonts.html
+                      bold-or-italic.html
+                      all-caps.html
+                      point-size.html
+                      
+                      ◊; advanced
+                      headings.html
+                      letterspacing.html
+                      kerning.html
+                      color.html
+                      alternate-figures.html
+                      ordinals.html
+                      web-and-email-addresses.html
+                      emails.html
+                      small-caps.html
+                      hierarchical-headings.html
+                      opentype-features.html
+                      mixing-fonts.html}
+font-recommendations.html
+a-brief-history-of-times-new-roman.html
+◊page-layout.html{
+                  ◊; basic
+                  centered-text.html
+                  justified-text.html
+                  first-line-indents.html
+                  space-between-paragraphs.html
+                  line-spacing.html
+                  line-length.html
+                  page-margins.html
+                  watermarks.html
+                  body-text.html
+                  hyphenation.html
+                  block-quotations.html
+                  bulleted-and-numbered-lists.html
+                  
+                  ◊; advanced
+                  tables.html
+                  rules-and-borders.html
+                  widow-and-orphan-control.html
+                  space-above-and-below.html
+                  page-break-before.html
+                  keep-lines-together.html
+                  keep-with-next-paragraph.html
+                  columns.html
+                  footnotes.html
+                  line-numbers.html
+                  bates-numbering.html
+                  paragraph-and-character-styles.html
+                  maxims-of-page-layout.html}
+◊sample-documents.html{
+                       caption-pages.html
+                       motions.html
+                       research-memos.html
+                       letterhead.html
+                       business-cards.html
+                       resumes.html
+                       grids-of-numbers.html
+                       presentations.html
+                       contracts.html
+                       court-opinions.html}
+◊appendix.html{
+               typewriter-habits.html
+               how-to-interpret-court-rules.html
+               printers-and-paper.html
+               how-to-make-a-pdf.html
+               bibliography.html}
+about.html

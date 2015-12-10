@@ -1,0 +1,21 @@
+#lang pollen
+◊(require sugar/coerce sugar/string sugar/file)
+
+error.html
+
+fonts/equity-a.css
+fonts/equity-b.css
+fonts/non-equity.css
+fonts/advocate-extras.css
+
+firefox.css
+bc.html
+
+◊fonts.html{
+            equity.html
+            concourse.html
+            triplicate.html
+            advocate.html}
+
+◊(define fontrec-dir "fontrec")
+◊(map (compose1 ->symbol (λ(str) (string-append fontrec-dir "/" str)) ->string remove-ext) (filter (λ(str) (ends-with? str "html.pm")) (map ->string (directory-list fontrec-dir))))

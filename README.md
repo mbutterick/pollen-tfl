@@ -1,4 +1,4 @@
-## © 2015 Matthew Butterick
+## © 2008–15 Matthew Butterick
 
 This is the source code for the Typography for Lawyers [web-based book](http://typographyforlawyers.com), which is an abbreviated version of the [paperback](http://typo.la/oc).
 
