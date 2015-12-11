@@ -6,8 +6,8 @@ slightly faster to load. The difference here is probably negligible.
 
 In general, the more virtuous habit is `#lang racket/base`.
 
-`pollen/mode` is a metalanguage that adds support for Pollen-mode commands in a source file. So instead
-of `#lang racket/base` we write `#lang pollen/mode racket/base`. `pollen/mode` is optional.
+`pollen/mode` is a metalanguage that adds support for Pollen-mode commands in a source file.
+So instead of `#lang racket/base` we write `#lang pollen/mode racket/base`. `pollen/mode` is optional.
 
 BTW this file is heavily commented so it can serve as a Pollen learning tool. Rather than just read
 along, you are encouraged to run this project with the project server active, and make changes to this
@@ -119,7 +119,7 @@ in `◊func[arg]{text ...}` can return any number of arguments. Maybe one (e.g.,
 or maybe more (e.g, if `text ...` is a multiline block).
 
 If you DON'T use a rest argument, and pass multiple text arguments to your tag function, you will get
-an error (specifically an "arity error", which means the function got more arguments than it expected).
+an error (namely an "arity error", which means the function got more arguments than it expected).
 
 The result of our tag function will be a tagged X-expression that looks like this:
 
@@ -135,22 +135,24 @@ X-expressions and tagged X-expressions are introduced in the Pollen docs.
       (let ([text-to-link url])
         ;; if we don't have any text to link, use `url` as the link text too.
         (link #:class class-name url text-to-link))
-      ;; otherwise, create the basic tagged X-expression, and then add the `url` and (maybe) `class` attributes.
+      ;; otherwise, create the basic tagged X-expression,
+      ;; and then add the `url` and (maybe) `class` attributes.
       ;; `let*` is the idiomatic Racket way to mutate a variable.
       ;; (Spoiler alert: you're not really mutating, you're creating copies.)
       ;; You could also use `set!` — not wrong, but not idiomatic.
       (let*
-          ;; A tagged X-expression is just a list of stuff, so you can make one with any of Racket's
-          ;; list-making functions.
+          ;; A tagged X-expression is just a list of stuff,
+          ;; so you can make one with any of Racket's list-making functions.
           ;; Here, we're using `make-txexpr` for maximum clarity:
           ;; it takes a tag name, list of attributes, and list of elements.
-          ;; We could also use quasiquote notation: `(a ,null ,@xs) or since attrs are optional, `(a ,@xs)
-          ;; We could also use (list* 'a null xs) or (list* 'a xs)
-          ;; We could also use (append (list 'a) null xs)
+          ;; We could also use
+          ;; 1) quasiquote: `(a ,null ,@xs) or `(a ,@xs)
+          ;; 2) list*: (list* 'a null xs) or (list* 'a xs)
+          ;; 3) append: (append (list 'a) null xs)
           ;; The point is not to baffle you, but rather show that there's no special magic to
           ;; a tagged X-expression, and no special need to use `make-txexpr` at all times.
-          ;; The major advantage of `make-txexpr` is that it will raise an error if your arguments are
-          ;; invalid types for a tagged X-expression.
+          ;; The major advantage of `make-txexpr` is that it will raise an error
+          ;; if your arguments are invalid types for a tagged X-expression.
           ;; Generic functions like `list` and `append` will not.
           ([link-tx (make-txexpr 'a null text-args)]
            
@@ -185,28 +187,44 @@ will be combined into a single submodule.
 
 (module+ test
   (require rackunit) ;; always include this at the start of the test submodule
-  
-  (check-equal? (link "http://foo.com" "link text") '(a ((href "http://foo.com")) "link text"))
+
+  ;; we use `check-txexprs-equal?` rather than `check-equal?` because it's a little more lenient:
+  ;; it allows the attributes of two txexprs to be in a different order,
+  ;; yet still be considered equal (because ordering of attributes is not semantically significant).
+  (check-txexprs-equal? (link "http://foo.com" "link text")
+                        '(a ((href "http://foo.com")) "link text"))
   ;; The last test was fine, but it can be even better if we use a Pollen-mode command on the left.
-  ;; That way, we can directly compare the command as it appears in Pollen input with how it appears in the output.
-  (check-equal? ◊link["http://foo.com"]{link text} '(a ((href "http://foo.com")) "link text"))
+  ;; That way, we can directly compare the command as it appears in Pollen input
+  ;; with how it appears in the output.
+  (check-txexprs-equal? ◊link["http://foo.com"]{link text}
+                        '(a ((href "http://foo.com")) "link text"))
   
   ;; It's wise to test as many valid input situations as you can.
-  (check-equal? ◊link["http://foo.com" #:class 'main]{link text} '(a ((href "http://foo.com")(class "main")) "link text"))
-  (check-equal? ◊link["http://foo.com"] '(a ((href "http://foo.com")) "http://foo.com"))
+  (check-txexprs-equal? ◊link["http://foo.com" #:class 'main]{link text}
+                        '(a ((href "http://foo.com")(class "main")) "link text"))
+  (check-txexprs-equal? ◊link["http://foo.com"]
+                        '(a ((href "http://foo.com")) "http://foo.com"))
   
   ;; Strictly speaking, you could also write the last Pollen command like so:
-  (check-equal? ◊link{http://foo.com} '(a ((href "http://foo.com")) "http://foo.com"))
-  ;; That's not wrong. But in the interests of code readability, I like to reserve the curly brackets in a Pollen command for material that I expect to see displayed in the output (e.g., textual and other content), and use the square brackets for the other arguments.
+  (check-txexprs-equal? ◊link{http://foo.com} '(a ((href "http://foo.com")) "http://foo.com"))
+  
+  ;; That's not wrong. But in the interests of code readability,
+  ;; I like to reserve the curly brackets in a Pollen command
+  ;; for material that I expect to see displayed in the output
+  ;; (e.g., textual and other content),
+  ;; and use the square brackets for the other arguments.
   
   ;; You can also check that errors arise when they should.
+  ;; Note that when testing for exceptions, you need to wrap your test expression in a function
+  ;; (so that its evaluation can be delayed, otherwise you'd get the error immediately.)
+  ;; The `(λ _ expression)` notation is a simple way.
+  ;; (The `_` is the idiomatic way to notate something that will be ignored, in this case arguments.)
   (check-exn exn:fail? (λ _ ◊link[])) ; no arguments
   (check-exn exn:fail? (λ _ ◊link[#:invalid-keyword 42])) ; invalid keyword argument
   (check-exn exn:fail? (λ _ ◊link[#f]))) ; invalid argument
 
 ;; For the sake of brevity, I'm going to write just one test for the remaining functions.
 ;; But you're encouraged to add more tests (or break the existing ones and see what happens).
-
 
 
 
@@ -245,29 +263,33 @@ Is equivalent to:
 (module+ test
   ;; notice that we use `buy-url` in our test result.
   ;; That way, if we change the value of `buy-url`, the test won't break.
-  (check-equal? ◊buy-book-link{link text} `(a ((href ,buy-url)) "link text")))
+  (check-txexprs-equal? ◊buy-book-link{link text} `(a ((href ,buy-url)) "link text")))
 
 #|
 `buylink`: creates a link styled with the "buylink" class.
 `home-link`: creates a link styled with the "home-link" class.
 
-The difference here is that we're not providing a specific URL. Rather, we want to pass through whatever URL we get from the Pollen source. So we add a `url` argument.
+The difference here is that we're not providing a specific URL. Rather, we want to pass through
+whatever URL we get from the Pollen source. So we add a `url` argument.
 |#
 (define (buylink url . text-args)
   (apply link url #:class "buylink" text-args))
 
 (module+ test
-  (check-equal? ◊buylink["http://foo.com"]{link text} '(a ((href "http://foo.com")(class "buylink")) "link text")))
+  (check-txexprs-equal? ◊buylink["http://foo.com"]{link text}
+                        '(a ((href "http://foo.com")(class "buylink")) "link text")))
 
 
 (define (home-link url . text-args)
   (apply link url #:class "home-link" text-args))
 
 (module+ test
-  (check-equal? ◊home-link["http://foo.com"]{link text} '(a ((href "http://foo.com")(class "home-link")) "link text")))
+  (check-txexprs-equal? ◊home-link["http://foo.com"]{link text}
+                        '(a ((href "http://foo.com")(class "home-link")) "link text")))
 
 #|
-BTW we could also be let the rest argument capture the URL, and just pass everything through with `apply`, which will work the same way:
+BTW we could also be let the rest argument capture the URL,
+and just pass everything through with `apply`, which will work the same way:
 
   (define (buylink . all-args)
     (apply link #:class "buylink" all-args))
@@ -279,9 +301,14 @@ The other definition is more readable and explicit, however.
 #|
 `image`: make an `img` tag
 
-We proceed as we did with `link`. But in this case, we don't need a rest argument because this tag function doesn't accept text arguments.
+We proceed as we did with `link`. But in this case, we don't need a rest argument
+because this tag function doesn't accept text arguments.
 
-"Right, but shouldn't you use a rest argument just in case?" It depends on how you like errors to be handled. You could capture the text arguments with a rest argument and then just silently dispose of them. But this might be mysterious to the person editing the Pollen source (whether you or someone else). "Where did my text go?" Whereas if we omit the rest argument, and try to pass text arguments anyhow, `image` will immediately raise an error, letting us know that we're misusing it.
+"Right, but shouldn't you use a rest argument just in case?" It depends on how you like errors
+to be handled. You could capture the text arguments with a rest argument and then just silently
+dispose of them. But this might be mysterious to the person editing the Pollen source (whether you
+or someone else). "Where did my text go?" Whereas if we omit the rest argument, and try to pass text
+arguments anyhow, `image` will immediately raise an error, letting us know that we're misusing it.
 |#
 (define (image src #:width [width "100%"] #:border [border? #t])
   (let* ([img-tag '(img)]
@@ -294,9 +321,12 @@ We proceed as we did with `link`. But in this case, we don't need a rest argumen
 
 
 (module+ test
-  (check-equal? ◊image["pic.gif"] '(img ((style "width: 100%") (class "bordered")(src "images/pic.gif"))))
-  (check-equal? ◊image[#:border #f "pic.gif"] '(img ((style "width: 100%")(src "images/pic.gif"))))
-  (check-equal? ◊image[#:width "50%" "pic.gif"] '(img ((style "width: 50%")(class "bordered")(src "images/pic.gif")))))
+  (check-txexprs-equal? ◊image["pic.gif"]
+                        '(img ((style "width: 100%") (class "bordered")(src "images/pic.gif"))))
+  (check-txexprs-equal? ◊image[#:border #f "pic.gif"]
+                        '(img ((style "width: 100%")(src "images/pic.gif"))))
+  (check-txexprs-equal? ◊image[#:width "50%" "pic.gif"]
+                        '(img ((style "width: 50%")(class "bordered")(src "images/pic.gif")))))
 
 
 #|
@@ -312,7 +342,7 @@ We proceed as we did with `link`. But in this case, we don't need a rest argumen
   (attr-set base 'style (format "width: ~a" factor))) 
 
 (module+ test
-  (check-equal? ◊div-scale[.5]{Hello} '(div ((style "width: 0.5")) "Hello")))
+  (check-txexprs-equal? ◊div-scale[.5]{Hello} '(div ((style "width: 0.5")) "Hello")))
 
 
 #|
@@ -327,7 +357,7 @@ We proceed as we did with `link`. But in this case, we don't need a rest argumen
   (attr-set base 'style (format "font-size: ~aem" ratio)))
 
 (module+ test
-  (check-equal? ◊font-scale[.75]{Hello} '(span ((style "font-size: 0.75em")) "Hello")))
+  (check-txexprs-equal? ◊font-scale[.75]{Hello} '(span ((style "font-size: 0.75em")) "Hello")))
 
 
 #|
@@ -341,7 +371,8 @@ We proceed as we did with `link`. But in this case, we don't need a rest argumen
   (attr-set (image image-path) 'class "home-image"))
 
 (module+ test
-  (check-equal? ◊home-image["pic.gif"] '(img ((style "width: 100%") (class "home-image") (src "images/pic.gif")))))
+  (check-txexprs-equal? ◊home-image["pic.gif"]
+                        '(img ((style "width: 100%") (class "home-image") (src "images/pic.gif")))))
 
 
 #|
@@ -350,13 +381,18 @@ We proceed as we did with `link`. But in this case, we don't need a rest argumen
 
   ◊home-overlay[image-name]{text}
 
-This is an example of how fiddly HTML markup chores can be encapsulated / hidden inside a tag function. This makes your source files tidier. It also makes it possible to change the fiddly HTML markup from one central location.
+This is an example of how fiddly HTML chores can be encapsulated / hidden inside a tag function.
+This makes your source files tidier.
+It also makes it possible to change the fiddly HTML markup from one central location.
 |#
 (define (home-overlay img-path . text-args)
-  `(div ((class "home-overlay")(style ,(format "background-image: url('~a')" img-path))) (div ((class "home-overlay-inner")) ,@text-args)))
+  `(div ((class "home-overlay")(style ,(format "background-image: url('~a')" img-path)))
+        (div ((class "home-overlay-inner")) ,@text-args)))
 
 (module+ test
-  (check-equal? ◊home-overlay["pic.gif"]{Hello} '(div ((class "home-overlay") (style "background-image: url('pic.gif')")) (div ((class "home-overlay-inner")) "Hello"))))
+  (check-txexprs-equal? ◊home-overlay["pic.gif"]{Hello}
+                        '(div ((class "home-overlay") (style "background-image: url('pic.gif')"))
+                              (div ((class "home-overlay-inner")) "Hello"))))
 
 
 #|
@@ -370,24 +406,27 @@ Here, I'll use `make-default-tag-function`, which is an easy way to make a simpl
 (define glyph (make-default-tag-function 'span #:class "glyph"))
 
 (module+ test
-  (check-equal? ◊glyph{X} '(span ((class "glyph")) "X"))
-  (check-equal? ◊glyph[#:id "top"]{X} '(span ((class "glyph")(id "top")) "X")))
+  (check-txexprs-equal? ◊glyph{X} '(span ((class "glyph")) "X"))
+  (check-txexprs-equal? ◊glyph[#:id "top"]{X} '(span ((class "glyph")(id "top")) "X")))
 
 
 
 (define (image-wrapped img-path)
-  (foldl (λ(attr-pair acc) (apply attr-set acc attr-pair)) (image img-path) '((class "icon") (style "width: 120px;") (align "left"))))
+  (foldl (λ(attr-pair acc) (apply attr-set acc attr-pair))
+         (image img-path) '((class "icon") (style "width: 120px;") (align "left"))))
 
 
 (define (wrap-list-items elems)
   (define list-item-separator-regexp (regexp "\n\n\n+"))
   (define list-items (filter-split (merge-newlines elems)
                                    (λ(elem)
-                                     (and (string? elem) (regexp-match list-item-separator-regexp elem)))))
+                                     (and (string? elem)
+                                          (regexp-match list-item-separator-regexp elem)))))
   (map (compose1 (λ(lips) `(li ,@lips)) (λ(li) (detect-paragraphs li #:force? #t))) list-items))
 
 (define (make-listifier tag [attrs empty])
-  ;; not using `decode` here because processing only happens at top, whereas `decode` descends recursively
+  ;; not using `decode` here because processing only happens at top,
+  ;; whereas `decode` descends recursively
   (λ xs `(,tag ,attrs ,@(wrap-list-items xs))))
 
 (define bullet-list (make-listifier 'ul))
@@ -396,7 +435,8 @@ Here, I'll use `make-default-tag-function`, which is an easy way to make a simpl
 
 (define (btw . xs)
   (define btw-prelim (apply (make-listifier 'ul (list '(class "btw"))) xs))
-  `(,(get-tag btw-prelim) ,(get-attrs btw-prelim) (cons '(div ((id "btw-title")) "by the way") ,@(get-elements btw-prelim))))
+  `(,(get-tag btw-prelim) ,(get-attrs btw-prelim)
+                          (cons '(div ((id "btw-title")) "by the way") ,@(get-elements btw-prelim))))
 
 (define (target->xref-name target)
   (let* ([xn target]
@@ -494,7 +534,9 @@ Here, I'll use `make-default-tag-function`, which is an easy way to make a simpl
   `(div ((id "doc")) ,@(decode-elements elements-with-paragraphs
                                         #:block-txexpr-proc hyphenate-block
                                         ;; `hangable-quotes` doesn't return a string, so do it last
-                                        #:string-proc (compose1 hangable-quotes fix-em-dashes smart-quotes)
+                                        #:string-proc (compose1 hangable-quotes
+                                                                fix-em-dashes
+                                                                smart-quotes)
                                         #:exclude-tags '(style script))))
 
 
@@ -533,7 +575,8 @@ Here, I'll use `make-default-tag-function`, which is an easy way to make a simpl
 (define caption (make-default-tag-function 'span #:class "caption"))
 
 (define (captioned name . xs)
-  `(table ((class "captioned indented")) (tr (td ((style "text-align:left")) ,@xs) (td  ,(caption name)))))
+  `(table ((class "captioned indented"))
+          (tr (td ((style "text-align:left")) ,@xs) (td  ,(caption name)))))
 
 
 (define mono (make-default-tag-function 'span #:class "mono"))
@@ -544,7 +587,9 @@ Here, I'll use `make-default-tag-function`, which is an easy way to make a simpl
   (path-string? . -> . any/c)
   (define img-extension "gif")
   (define img-pathstring (->string (add-ext (remove-ext pdf-pathstring) img-extension)))
-  (define sips-command (format "sips -Z 2000 -s format ~a --out '~a' '~a' > /dev/null" img-extension img-pathstring pdf-pathstring))
+  (define sips-command
+    (format "sips -Z 2000 -s format ~a --out '~a' '~a' > /dev/null"
+            img-extension img-pathstring pdf-pathstring))
   (let ([result (system sips-command)])
     (if result
         (link pdf-pathstring `(img ((src ,img-pathstring))))
@@ -573,7 +618,8 @@ Here, I'll use `make-default-tag-function`, which is an easy way to make a simpl
 
 (define font-details (make-default-tag-function 'div #:class "font-details"))
 
-(define mb-font-specimen (make-default-tag-function 'div #:class "mb-font-specimen" #:contenteditable "true"))
+(define mb-font-specimen
+  (make-default-tag-function 'div #:class "mb-font-specimen" #:contenteditable "true"))
 
 (define (margin-note . xs)
   `(div ((class "margin-note") ,no-hyphens-attr) ,@xs))
