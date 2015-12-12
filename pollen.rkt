@@ -12,17 +12,27 @@ So instead of `#lang racket/base` we write `#lang pollen/mode racket/base`. `pol
 BTW this file is heavily commented so it can serve as a Pollen learning tool. Rather than just read
 along, you are encouraged to run this project with the project server active, and make changes to this
 file and see how they affect the output.
-|#
 
-
-#|
 We could avoid the next line if we were using `#lang racket`, because these libraries would already
 be available.
 |#
-(require (for-syntax racket/base racket/syntax)
-         racket/list racket/format racket/string racket/function racket/contract racket/system)
-(require txexpr pollen/decode pollen/tag hyphenate
-         sugar/list sugar/coerce sugar/file sugar/debug "pricing-table.rkt")
+(require
+  (for-syntax racket/base racket/syntax) ; enables macros
+  racket/list
+  racket/format
+  racket/string
+  racket/function
+  racket/contract
+  racket/system
+  txexpr
+  pollen/decode
+  pollen/tag
+  hyphenate
+  sugar/list
+  sugar/coerce
+  sugar/file
+  sugar/debug
+  "pricing-table.rkt")
 
 
 #|
@@ -187,7 +197,7 @@ will be combined into a single submodule.
 
 (module+ test
   (require rackunit) ;; always include this at the start of the test submodule
-
+  
   ;; we use `check-txexprs-equal?` rather than `check-equal?` because it's a little more lenient:
   ;; it allows the attributes of two txexprs to be in a different order,
   ;; yet still be considered equal (because ordering of attributes is not semantically significant).
@@ -291,15 +301,15 @@ whatever URL we get from the Pollen source. So we add a `url` argument.
 BTW we could also be let the rest argument capture the URL,
 and just pass everything through with `apply`, which will work the same way:
 
-  (define (buylink . all-args)
-    (apply link #:class "buylink" all-args))
+  (define (buylink . url-and-text-args)
+    (apply link #:class "buylink" url-and-text-args))
 
 The other definition is more readable and explicit, however.
 |#
 
 
 #|
-`image`: make an `img` tag
+`image`: make an img tag
 
 We proceed as we did with `link`. But in this case, we don't need a rest argument
 because this tag function doesn't accept text arguments.
@@ -307,8 +317,10 @@ because this tag function doesn't accept text arguments.
 "Right, but shouldn't you use a rest argument just in case?" It depends on how you like errors
 to be handled. You could capture the text arguments with a rest argument and then just silently
 dispose of them. But this might be mysterious to the person editing the Pollen source (whether you
-or someone else). "Where did my text go?" Whereas if we omit the rest argument, and try to pass text
-arguments anyhow, `image` will immediately raise an error, letting us know that we're misusing it.
+or someone else). "Where did my text go?"
+
+Whereas if we omit the rest argument, and try to pass text arguments anyhow, `image` will immediately
+raise an error, letting us know that we're misusing it.
 |#
 (define (image src #:width [width "100%"] #:border [border? #t])
   (let* ([img-tag '(img)]
@@ -357,7 +369,8 @@ arguments anyhow, `image` will immediately raise an error, letting us know that 
   (attr-set base 'style (format "font-size: ~aem" ratio)))
 
 (module+ test
-  (check-txexprs-equal? ◊font-scale[.75]{Hello} '(span ((style "font-size: 0.75em")) "Hello")))
+  (check-txexprs-equal? ◊font-scale[.75]{Hello}
+                        '(span ((style "font-size: 0.75em")) "Hello")))
 
 
 #|
@@ -402,65 +415,209 @@ It also makes it possible to change the fiddly HTML markup from one central loca
   ◊glyph{text}
 
 Here, I'll use `make-default-tag-function`, which is an easy way to make a simple tag function.
+Any keywords passed in will be propagated to every use of the tag function.
 |#
 (define glyph (make-default-tag-function 'span #:class "glyph"))
 
 (module+ test
-  (check-txexprs-equal? ◊glyph{X} '(span ((class "glyph")) "X"))
-  (check-txexprs-equal? ◊glyph[#:id "top"]{X} '(span ((class "glyph")(id "top")) "X")))
+  (check-txexprs-equal? ◊glyph{X}
+                        '(span ((class "glyph")) "X"))
+  (check-txexprs-equal? ◊glyph[#:id "top"]{X}
+                        '(span ((class "glyph")(id "top")) "X")))
 
 
+#|
 
+`image-wrapped`: like `image` but with some extra attributes
+
+  ◊image-wrapped[img-path]
+
+|#
 (define (image-wrapped img-path)
-  (foldl (λ(attr-pair acc) (apply attr-set acc attr-pair))
-         (image img-path) '((class "icon") (style "width: 120px;") (align "left"))))
+  (attr-set* (image img-path) 'class "icon" 'style "width: 120px;" 'align "left"))
+
+(module+ test
+  (check-txexprs-equal? ◊image-wrapped{my-path}
+                        '(img ((class "icon")
+                               (style "width: 120px;")
+                               (align "left")
+                               (src "images/my-path")))))
+
+#|
+
+`detect-list-items`: helper function for other tag functions that make HTML lists.
+
+The idea is to automatically convert a sequence of three (or more) linebreaks
+into a new list item (i.e., <li> tag).
+
+Why three? Because later on, we'll make one linebreak = new line and two linebreaks = new paragraph.
+
+This function will be used within a `decode` function (more on that below)
+in a position where it will be passed a list of X-expresssion elements,
+and needs to return a list of X-expression elements.
+
+The idiomatic Racket way to enforce requirements on input & output values is with a function contract.
+For simplicity, I'm not using them here.
+|#
+(define (detect-list-items elems)
+  
+  ;; We need to do some defensive preprocessing here.
+  ;; Our list of elements could contain sequences like "\n" "\n" "\n"
+  ;; that should mean the same thing as "\n\n\n".
+  ;; So we combine adjacent newlines with `merge-newlines`.
+  (define elems-merged (merge-newlines elems))
+  
+  ;; Then, a list item break is denoted by any element that matches three or more newlines.
+  (define (list-item-break? elem)
+    (define list-item-separator-pattern (regexp "\n\n\n+"))
+    
+    ;; Python people will object to the `(string? elem)` test below
+    ;; as a missed chance for "duck typing".
+    ;; You can do duck typing in Racket (see `with-handlers`) but it's not idiomatic.
+    ;; IMO this is wise. Duck typing is an anti-pattern: it substitutes an explicit, readable test
+    ;; for an implicit test ("I know if such-and-such isn't true, then a certain error will arise."
+    (and (string? elem) (regexp-match list-item-separator-pattern elem)))
+  
+  ;; `filter-split` will divide a list into sublists based on a certain test.
+  ;; the result will be a list of lists, each representing the contents of an 'li tag.
+  (define list-of-li-elems (filter-split elems-merged list-item-break?))
+  
+  ;; We convert any paragraphs that are inside the list items.
+  (define list-of-li-paragraphs (map (λ(li) (detect-paragraphs li #:force? #t)) list-of-li-elems))
+  
+  ;; Finally we wrap each of these lists of paragraphs in an 'li tag.
+  (define li-tag (make-default-tag-function 'li))
+  (map (λ(lip) (apply li-tag lip)) list-of-li-paragraphs))
+
+(module+ test
+  (check-equal? (detect-list-items '("foo" "\n" "bar")) ; linebreak, not list item break
+                '((li (p "foo" (br) "bar"))))
+  (check-equal? (detect-list-items '("foo" "\n" "\n" "bar")) ; paragraph break, not list item break
+                '((li (p "foo") (p "bar"))))
+  (check-equal? (detect-list-items '("foo" "\n" "\n" "\n" "bar")) ; list item break
+                '((li (p "foo")) (li (p "bar"))))
+  (check-equal? (detect-list-items '("foo" "\n\n\n" "bar")) ; list item break, concatenated
+                '((li (p "foo")) (li (p "bar"))))
+  (check-equal? (detect-list-items '("foo" "\n" "\n" "\n\n\n" "bar")) ; list item break
+                '((li (p "foo")) (li (p "bar")))))
 
 
-(define (wrap-list-items elems)
-  (define list-item-separator-regexp (regexp "\n\n\n+"))
-  (define list-items (filter-split (merge-newlines elems)
-                                   (λ(elem)
-                                     (and (string? elem)
-                                          (regexp-match list-item-separator-regexp elem)))))
-  (map (compose1 (λ(lips) `(li ,@lips)) (λ(li) (detect-paragraphs li #:force? #t))) list-items))
+#|
+`make-list-function`: helper function that makes other tag functions that make lists.
 
-(define (make-listifier tag [attrs empty])
-  ;; not using `decode` here because processing only happens at top,
-  ;; whereas `decode` descends recursively
-  (λ xs `(,tag ,attrs ,@(wrap-list-items xs))))
+  (make-list-function 'list-tag-name)
+  (make-list-function 'list-tag-name '((attr-key "attr-value") ...))
 
-(define bullet-list (make-listifier 'ul))
+In Racket you will often see functions that make other functions.
+This is a good way to avoid making a bunch of functions that have small variations.
 
-(define numbered-list (make-listifier 'ol))
+One way to write this function is like so:
 
-(define (btw . xs)
-  (define btw-prelim (apply (make-listifier 'ul (list '(class "btw"))) xs))
-  `(,(get-tag btw-prelim) ,(get-attrs btw-prelim)
-                          (cons '(div ((id "btw-title")) "by the way") ,@(get-elements btw-prelim))))
+(define (listifier . args)
+  (list* tag attrs (detect-list-items args)))
+listifier
 
-(define (target->xref-name target)
+That is, explicitly define a new function called `listifier` and then return that function.
+That's the best way to do it in many programming languages.
+
+In Racket, it's not wrong, but you should feel comfortable
+with the idea that any function can be equivalently expressed in lambda notation,
+which is the more Rackety idiom.
+
+The code below has the same meaning, but without having to `define` an intermediate variable.
+|#
+(define (make-list-function tag [attrs empty])
+  (λ args (list* tag attrs (detect-list-items args))))
+
+
+#|
+Now we can define `bullet-list` and `numbered-list` using our helper function.
+|#
+
+(define bullet-list (make-list-function 'ul))
+(define numbered-list (make-list-function 'ol))
+
+(module+ test
+  (check-txexprs-equal? (bullet-list "foo") '(ul (li (p "foo"))))
+  (check-txexprs-equal? (numbered-list "foo") '(ol (li (p "foo")))))
+
+
+#|
+`btw`: make the "By the Way" list at the bottom of many pages,
+e.g. http://typographyforlawyers.com/what-is-typography.html
+
+  ◊btw{text ...}
+
+Another example of using a tag function to handle fiddly HTML markup.
+The `btw` tag expands to an HTML list, which we will then crack open and add a headline div.
+|#
+(define (btw . text-args)
+  (define btw-tag-function (make-list-function 'ul '((class "btw"))))
+  ;; Why is `apply` needed here? See the explanation for `buy-book-link` above.
+  (define btw-list (apply btw-tag-function text-args))
+  (list* (get-tag btw-list)
+         (get-attrs btw-list)
+         '(div ((id "btw-title")) "by the way")
+         (get-elements btw-list)))
+
+(module+ test
+  (check-txexprs-equal? (btw "foo" "\n" "\n" "\n" "bar")
+                        '(ul ((class "btw"))
+                             (div ((id "btw-title")) "by the way")
+                             (li (p "foo"))
+                             (li (p "bar")))))
+
+#|
+`xref`: create a styled cross-reference link, with optional destination argument.
+
+  ◊xref{target}
+  ◊xref["url"]{target}
+
+For this tag function, we will assume that target is a single text argument,
+because that's how it will be used.
+But to be safe, we'll raise an arity error if we get too many arguments.
+|#
+(define xref
+  ;; What makes this function a little tricky is that the url argument is optional,
+  ;; but if it appears, it appears first.
+  ;; This is a good job for `case-lambda`, which lets you define separate branches for your function
+  ;; depending on the total number of arguments provided.
+  (case-lambda
+    
+    ;; one argument: must be a target. Note the Rackety recursive technique here:
+    ;; we'll create a second argument and then call `xref` again.
+    [(target) (xref (target->url target) target)]
+
+    ;; two arguments: must be a url followed by a target.
+    [(url target) (apply attr-set* (link url target) 'class "xref" no-hyphens-attr)]
+
+    ;; more than two arguments: raise an arity error.
+    [more-than-two-args (apply raise-arity-error 'xref (list 1 2) more-than-two-args)]))
+
+
+(module+ test
+  (check-txexprs-equal? (xref "target")
+                        '(a ((class "xref") (href "target.html") (hyphens "none")) "target"))
+  (check-txexprs-equal? (xref "url" "target")
+                        '(a ((class "xref") (href "url") (hyphens "none")) "target"))
+  (check-exn exn:fail:contract:arity? (λ _ (xref "url" "target" "spurious-third-argument"))))
+  
+                        
+
+(define (target->url target)
+  (define nonbreaking-space (~a #\u00A0))
   (let* ([xn target]
          [xn (string-trim xn "?")]
          [xn (string-downcase xn)]
          [xn (regexp-replace* #rx"é" xn "e")]
          [xn (if (regexp-match #rx"^foreword" xn) "foreword" xn)]
          [xn (if (regexp-match #rx"^table of contents" xn) "toc" xn)]
-         [xn (string-replace xn " " "-")] ; replace nbsp with hyphen
+         [xn (string-replace xn nonbreaking-space "-")]
          [xn (string-replace xn " " "-")])
     (format "~a.html" xn)))
 
-
-(define (xref file-or-target . xs)
-  (define target (if (null? xs)
-                     (list file-or-target)
-                     xs))
-  (define url (if (null? xs)
-                  (target->xref-name file-or-target)
-                  file-or-target))
-  (apply attr-set (attr-set (apply link url target) 'class "xref") no-hyphens-attr))
-
 (define (xref-font font-name)
-  (xref (format "fontrec/~a" (target->xref-name font-name)) font-name))
+  (xref (format "fontrec/~a" (target->url font-name)) font-name))
 
 
 
