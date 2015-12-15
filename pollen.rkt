@@ -13,7 +13,8 @@ BTW this file is heavily commented so it can serve as a Pollen learning tool. Ra
 along, you are encouraged to run this project with the project server active, and make changes to this
 file and see how they affect the output.
 
-We could avoid the next line if we were using `#lang racket`, because these libraries would already
+We could avoid the next `require` if we were using `#lang racket`, because these libraries would
+already
 be available.
 |#
 (require
@@ -24,37 +25,29 @@ be available.
   racket/function
   racket/contract
   racket/match
-  racket/system
+  racket/system)
+
+
+#|
+Other libraries we'll be using.
+|#
+(require
+  sugar
   txexpr
   pollen/decode
   pollen/tag
   hyphenate
-  sugar/list
-  sugar/coerce
-  sugar/file
-  sugar/debug
   "pricing-table.rkt")
 
 
 #|
-Everything provided from a pollen.rkt will be automatically available to Pollen source files in the
+Everything provided from a pollen.rkt is automatically available to Pollen source files in the
 same directory or subdirectories (unless superseded by another pollen.rkt, as in the "fonts" subdir)
 
 Note that `all-defined-out` would only export the definitions that are created in this file. To make
 imported definitions available too, we need to re-export them with `all-from-out`.
 |#
 (provide (all-defined-out) (all-from-out "pricing-table.rkt"))
-
-
-#|
-The 'config' submodule has special status: It can be used to alter project settings. Here, we'll use
-it to omit all "woff" files from the published project.
-See docs for `pollen/world` and `world:unpublished-path?`.
-|#
-(module config racket/base
-  (provide (all-defined-out)) ;; <- don't forget this line in your config submodule!
-  (define (unpublished-path? p)
-    (regexp-match "woff" (path->string p))))
 
 
 #|
@@ -124,8 +117,8 @@ The definition of `link` follows the arguments above.
 `url` is a mandatory argument.
 `class` is a keyword argument (= must be introduced with #:class) and also optional (if it's not
 provided, it will default to #f).
-`xs` is a rest argument, as in "put the rest of the arguments here." Most definitions of tag functions
-should end with a rest argument. Why? Because in Pollen notation, the `{text ...}`
+`xs` is a rest argument, as in "put the rest of the arguments here." Most definitions of
+tag functions should end with a rest argument. Why? Because in Pollen notation, the `{text ...}`
 in `◊func[arg]{text ...}` can return any number of arguments. Maybe one (e.g., if `text` is a word)
 or maybe more (e.g, if `text ...` is a multiline block).
 
@@ -152,21 +145,7 @@ X-expressions and tagged X-expressions are introduced in the Pollen docs.
       ;; (Spoiler alert: you're not really mutating, you're creating copies.)
       ;; You could also use `set!` — not wrong, but not idiomatic.
       (let*
-          ;; A tagged X-expression is just a list of stuff,
-          ;; so you can make one with any of Racket's list-making functions.
-          ;; Here, we're using `make-txexpr` for maximum clarity:
-          ;; it takes a tag name, list of attributes, and list of elements.
-          ;; We could also use
-          ;; 1) quasiquote: `(a ,null ,@xs) or `(a ,@xs)
-          ;; 2) list*: (list* 'a null xs) or (list* 'a xs)
-          ;; 3) append: (append (list 'a) null xs)
-          ;; The point is not to baffle you, but rather show that there's no special magic to
-          ;; a tagged X-expression, and no special need to use `make-txexpr` at all times.
-          ;; The major advantage of `make-txexpr` is that it will raise an error
-          ;; if your arguments are invalid types for a tagged X-expression.
-          ;; Generic functions like `list` and `append` will not.
-          ([link-tx (make-txexpr 'a null text-args)]
-           
+          ([link-tx (make-txexpr 'a empty text-args)]           
            ;; `attr-set` is from the `txexpr` module. It updates an attribute value
            ;; and returns an updated X-expression.
            [link-tx (attr-set link-tx 'href url)]
@@ -174,6 +153,69 @@ X-expressions and tagged X-expressions are introduced in the Pollen docs.
                         (attr-set link-tx 'class class-name)
                         link-tx)])
         link-tx)))
+
+
+#|
+Making tagged X-expressions (txexprs)
+
+In a "pollen.rkt" file you'll be making a lot of tagged X-expressions (txexprs for short).
+A txexpr is just a Racket list, so you can make one with any of Racket's list-making functions
+(which are plentiful). Let's run through a few of them, so they start to become familiar.
+
+Suppose we want to generate the txexpr '(div ((class "big")) "text"). Here are some ways to do it.
+
+1) `make-txexpr`
+A utility function from the `txexpr` module. We used it in the `link` function above.
+The major advantage of `make-txexpr` is that it will raise an error if your arguments are invalid
+types for a tagged X-expression.
+|#
+(check-txexprs-equal? (make-txexpr 'div '((class "big")) '("text"))
+                      '(div ((class "big")) "text"))
+#|
+The second and third arguments to `make-txexpr` are lists, so you can use any list notation.
+If your txexpr doesn't have attributes, you can pass `empty` or `null` for the second argument.
+|#
+(check-txexprs-equal? (make-txexpr 'div (list '(class "big")) (list "text"))
+                      '(div ((class "big")) "text"))
+
+#|
+2) `list` and `list*`
+`list*` is particularly useful for making txexprs, because it automatically splices the last argument.
+|#
+(check-txexprs-equal? (list 'div '((class "big")) "text")
+                      '(div ((class "big")) "text"))
+
+(check-txexprs-equal? (list* 'div '((class "big")) '("text"))
+                      '(div ((class "big")) "text"))
+
+#|
+3) `cons`
+All lists are ultimately made of `cons` cells.
+So you can make txexprs with it too, though it's more cumbersome than the other methods.
+In most cases, `list*` is clearer & more flexible (`cons` can only take two arguments;
+`list*` can take any number)
+|#
+(check-txexprs-equal? (cons 'div (cons '((class "big")) (cons "text" empty)))
+                      '(div ((class "big")) "text"))
+
+(check-txexprs-equal? (cons 'div (list '((class "big")) "text"))
+                      '(div ((class "big")) "text"))
+
+#|
+4) `quasiquote`
+As the name suggests, quasiquote works like quote, but lets you "unquote" variables within.
+Quasiquote notation is pleasingly compact for simple cases, but can be unruly for complex ones.
+The unquote operator (,) puts a variable's value into the list.
+The unquote splicing operator (,@) does the same thing, but if the variable holds a list of items,
+it merges those items into the list (i.e., does not leave them as a sublist).
+|#
+(check-txexprs-equal? (let ([tag 'div]
+                            [attrs '((class "big"))]
+                            [elements '("text")])
+                        ; we unquote `attrs` because we want them as a sublist
+                        ; but we splice `elements` because we don't want them in a sublist
+                        `(,tag ,attrs ,@elements)) 
+                      '(div ((class "big")) "text"))
 
 #|
 UNIT TESTS
@@ -199,11 +241,12 @@ will be combined into a single submodule.
 (module+ test
   (require rackunit) ;; always include this at the start of the test submodule
   
-  ;; we use `check-txexprs-equal?` rather than `check-equal?` because it's a little more lenient:
+  ;; We use `check-txexprs-equal?` rather than `check-equal?` because it's a little more lenient:
   ;; it allows the attributes of two txexprs to be in a different order,
   ;; yet still be considered equal (because ordering of attributes is not semantically significant).
   (check-txexprs-equal? (link "http://foo.com" "link text")
                         '(a ((href "http://foo.com")) "link text"))
+  
   ;; The last test was fine, but it can be even better if we use a Pollen-mode command on the left.
   ;; That way, we can directly compare the command as it appears in Pollen input
   ;; with how it appears in the output.
@@ -236,7 +279,6 @@ will be combined into a single submodule.
 
 ;; For the sake of brevity, I'm going to write just one test for the remaining functions.
 ;; But you're encouraged to add more tests (or break the existing ones and see what happens).
-
 
 
 #|
@@ -324,13 +366,11 @@ Whereas if we omit the rest argument, and try to pass text arguments anyhow, `im
 raise an error, letting us know that we're misusing it.
 |#
 (define (image src #:width [width "100%"] #:border [border? #t])
-  (let* ([img-tag '(img)]
-         [img-tag (attr-set img-tag 'style (format "width: ~a" width))]
-         [img-tag (attr-set img-tag 'src (build-path "images" src))]
-         [img-tag (if border?
-                      (attr-set img-tag 'class "bordered")
-                      img-tag)])
-    img-tag))
+  (define img-tag (attr-set* '(img) 'style (format "width: ~a" width)
+                             'src (build-path "images" src)))
+  (if border?
+      (attr-set img-tag 'class "bordered")
+      img-tag))
 
 
 (module+ test
@@ -767,7 +807,6 @@ You could improve it to fill in blank cells in rows that need them.
   ;; (A situation we already encountered in `detect-list-items`.)
   (define rows-of-text-cells
     (let ([text-rows (filter-not whitespace? text-args)]) ; throw out the linebreak characters
-      
       ;; `for/list` is very handy: a `for` loop that gathers the results into a list.
       ;; Think of it as a more flexible version of `map`.
       (for/list ([text-row (in-list text-rows)])
@@ -808,17 +847,18 @@ You could improve it to fill in blank cells in rows that need them.
            (tr (td "three") (td "four"))
            (tr (td "five") (td "six")))))
 
+#|
 
+|#
 (define (pdf-thumbnail-link pdf-pathstring)
   (define img-extension "gif")
   (define img-pathstring (->string (add-ext (remove-ext pdf-pathstring) img-extension)))
   (define sips-command
     (format "sips -Z 2000 -s format ~a --out '~a' '~a' > /dev/null"
             img-extension img-pathstring pdf-pathstring))
-  (let ([result (system sips-command)])
-    (if result
+  (if (system sips-command)
         (link pdf-pathstring `(img ((src ,img-pathstring))))
-        (error 'pdf-thumbnail-link "sips failed"))))
+        (error 'pdf-thumbnail-link "sips failed")))
 
 
 
