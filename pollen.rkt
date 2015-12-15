@@ -23,6 +23,7 @@ be available.
   racket/string
   racket/function
   racket/contract
+  racket/match
   racket/system
   txexpr
   pollen/decode
@@ -538,8 +539,8 @@ Now we can define `bullet-list` and `numbered-list` using our helper function.
 (define numbered-list (make-list-function 'ol))
 
 (module+ test
-  (check-txexprs-equal? (bullet-list "foo") '(ul (li (p "foo"))))
-  (check-txexprs-equal? (numbered-list "foo") '(ol (li (p "foo")))))
+  (check-txexprs-equal? ◊bullet-list{foo} '(ul (li (p "foo"))))
+  (check-txexprs-equal? ◊numbered-list{foo} '(ol (li (p "foo")))))
 
 
 #|
@@ -561,7 +562,10 @@ The `btw` tag expands to an HTML list, which we will then crack open and add a h
          (get-elements btw-list)))
 
 (module+ test
-  (check-txexprs-equal? (btw "foo" "\n" "\n" "\n" "bar")
+  (check-txexprs-equal? ◊btw{foo
+                             
+                             
+ bar}
                         '(ul ((class "btw"))
                              (div ((id "btw-title")) "by the way")
                              (li (p "foo"))
@@ -587,43 +591,83 @@ But to be safe, we'll raise an arity error if we get too many arguments.
     ;; one argument: must be a target. Note the Rackety recursive technique here:
     ;; we'll create a second argument and then call `xref` again.
     [(target) (xref (target->url target) target)]
-
+    
     ;; two arguments: must be a url followed by a target.
     [(url target) (apply attr-set* (link url target) 'class "xref" no-hyphens-attr)]
-
+    
     ;; more than two arguments: raise an arity error.
     [more-than-two-args (apply raise-arity-error 'xref (list 1 2) more-than-two-args)]))
 
 
 (module+ test
-  (check-txexprs-equal? (xref "target")
+  (check-txexprs-equal? ◊xref{target}
                         '(a ((class "xref") (href "target.html") (hyphens "none")) "target"))
-  (check-txexprs-equal? (xref "url" "target")
+  (check-txexprs-equal? ◊xref["url"]{target}
                         '(a ((class "xref") (href "url") (hyphens "none")) "target"))
   (check-exn exn:fail:contract:arity? (λ _ (xref "url" "target" "spurious-third-argument"))))
-  
-                        
 
+
+#|
+`target->url`: convert the target text of an xref into a url.
+
+This function depends on my commitment to name my source files in a logical, predictable way,
+e.g., "Why Does Typography Matter?" becomes "why-does-typography-matter.html".
+If you needed to associate targets with URLs arbitrarily, you could store the targets and URLs
+in an association list or hashtable.
+
+I do it this way so that it's easy to add new pages and xrefs, without the extra housekeeping step
+The name of the source file for a page is determined by its title.
+|#
 (define (target->url target)
   (define nonbreaking-space (~a #\u00A0))
   (let* ([xn target]
-         [xn (string-trim xn "?")]
-         [xn (string-downcase xn)]
-         [xn (regexp-replace* #rx"é" xn "e")]
-         [xn (if (regexp-match #rx"^foreword" xn) "foreword" xn)]
-         [xn (if (regexp-match #rx"^table of contents" xn) "toc" xn)]
-         [xn (string-replace xn nonbreaking-space "-")]
-         [xn (string-replace xn " " "-")])
+         [xn (string-trim xn "?")] ; delete a question mark at the end
+         [xn (string-downcase xn)] ; put string in all lowercase
+         [xn (regexp-replace* #rx"é" xn "e")] ; remove accented é
+         [xn (if (regexp-match #rx"^foreword" xn) "foreword" xn)] ; special rule for foreword
+         [xn (if (regexp-match #rx"^table of contents" xn) "toc" xn)] ; special rule for toc
+         [xn (string-replace xn nonbreaking-space "-")] ; replace nbsp with hyphen
+         [xn (string-replace xn " " "-")]) ; replace word space with hyphen
     (format "~a.html" xn)))
 
+(module+ test
+  (check-equal? (target->url "foo?") "foo.html")
+  (check-equal? (target->url "FOO") "foo.html")
+  (check-equal? (target->url "foé") "foe.html")
+  (check-equal? (target->url "Foreword Lengthy Title") "foreword.html")
+  (check-equal? (target->url "Table of Contents and Other Nonsense") "toc.html")
+  (check-equal? (target->url "Nonbreaking Space and Spaces") "nonbreaking-space-and-spaces.html"))
+
+#|
+`xref-font`: special version of `xref` for the fontrec directory
+|#
 (define (xref-font font-name)
   (xref (format "fontrec/~a" (target->url font-name)) font-name))
 
 
+#|
+`no-hyphens-attr`: an attribute we'll use to signal that some X-expression should not be hyphenated.
+|#
+(define no-hyphens-attr '(hyphens "none"))
 
-(define-syntax-rule (define-heading name tag)
-  (define (name #:class [class-string ""] . xs)
-    `(,tag ((class ,(string-trim (format "~a ~a" 'name class-string))) ,no-hyphens-attr) ,@xs)))
+#|
+`define-heading`: macro for defining a function that makes a heading.
+
+This could also be done with `make-default-tag-function`. And as a rule of thumb, it's wise to reserve
+macros for the times you can't avoid using them. Otherwise, use a function.
+
+We'll bend that rule here because this is a quick & easy example macro. What makes it suitable to be
+handled as a macro is that we want to use the name of the identifier (for instance 'topic') as an
+argument to the function. Ordinarily we can't do that, but with a macro, we can.
+
+`define-syntax-rule` is the easiest macro form: essentially you're writing a code template
+with arguments that will be filled in when you invoke the macro.
+|#
+(define-syntax-rule (define-heading heading-name tag)
+  ; first, heading-name is used as an identifier
+  (define (heading-name . text-args)
+    ; then it's used as a symbol that is converted to a string.
+    (list* tag (list `(class ,(~a 'heading-name)) no-hyphens-attr) text-args))) 
 
 (define-heading topic 'h3)
 (define-heading subhead 'h3)
@@ -631,25 +675,184 @@ But to be safe, we'll raise an arity error if we get too many arguments.
 (define-heading section 'h2)
 (define-heading chapter 'h1)
 
-(define title-key 'title)
+(module+ test
+  (check-txexprs-equal? ◊topic{foo}
+                        '(h3 ((class "topic") (hyphens "none")) "foo"))
+  (check-txexprs-equal? ◊subhead{foo}
+                        '(h3 ((class "subhead") (hyphens "none")) "foo"))
+  (check-txexprs-equal? ◊font-headline{foo}
+                        '(h3 ((class "font-headline") (hyphens "none")) "foo"))
+  (check-txexprs-equal? ◊section{foo}
+                        '(h2 ((class "section") (hyphens "none")) "foo"))
+  (check-txexprs-equal? ◊chapter{foo}
+                        '(h1 ((class "chapter") (hyphens "none")) "foo")))
 
-(define-syntax (define-thing-from-metas stx)
+#|
+`define-heading-from-metas`: macro for defining a function that makes a heading
+by relying on data in the metas.
+
+This macro relies on `syntax-case` rather than `define-syntax-rule`.
+It's a little more complicated, but also more flexible (and more idiomatic in Racket).
+`define-syntax-rule` is actually a special simplified version of `syntax-case`.
+The best advice on learning macros is to start with `syntax-case`, because you can't live without it.
+Good tutorial: http://www.greghendershott.com/fear-of-macros/pattern-matching.html
+
+Otherwise this macro is similar to `define-heading`, except that we want to introduce a new identifier
+based on the name given to the macro. So if we pass `topic` to the macro, it will define
+an identifier called `topic-from-metas`. You can't do that with `define-syntax-rule`.
+
+For fun, I used Pollen notation inside the macro just to show you that it will work.
+
+|#
+(define meta-key-for-page-title 'title)
+(define-syntax (define-heading-from-metas stx)
   (syntax-case stx ()
-    [(_ thing)
-     (with-syntax ([thing-from-metas (format-id stx "~a-from-metas" #'thing)])
-       #'(define (thing-from-metas metas)
-           (thing (hash-ref metas title-key))))]))
+    [(_ heading-name)
+     (with-syntax ([heading-from-metas (format-id stx "~a-from-metas" #'heading-name)])
+       #'(define (heading-from-metas metas)
+           ◊heading-name{◊(hash-ref metas meta-key-for-page-title)}))]))
 
-(define-thing-from-metas topic)
-(define-thing-from-metas section)
-(define-thing-from-metas chapter)
+(define-heading-from-metas topic)
+(define-heading-from-metas section)
+(define-heading-from-metas chapter)
 
-(define (hanging-topic topic-xexpr . xs)
-  `(div ((class "hanging-topic") ,no-hyphens-attr) ,topic-xexpr (p (,no-hyphens-attr) ,@xs)))
+(module+ test
+  (let ([my-fake-metas (hash 'title "Fake Title" 'white "noise")])
+    (check-txexprs-equal? ◊topic-from-metas[my-fake-metas]
+                          '(h3 ((class "topic") (hyphens "none")) "Fake Title"))
+    (check-txexprs-equal? ◊section-from-metas[my-fake-metas]
+                          '(h2 ((class "section") (hyphens "none")) "Fake Title"))
+    (check-txexprs-equal? ◊chapter-from-metas[my-fake-metas]
+                          '(h1 ((class "chapter") (hyphens "none")) "Fake Title"))))
 
-(define omission (make-default-tag-function 'div #:class "omission"))
+#|
+`hanging-topic`: convert a topic + subhead into one HTML markup unit
 
-(define no-hyphens-attr '(hyphens "none"))
+  ◊hanging-topic["Topic name"]{One-line explanation}
+
+|#
+(define (hanging-topic topic-xexpr . text-args)
+  (make-txexpr 'div (list '(class "hanging-topic") no-hyphens-attr)
+               (list topic-xexpr (list* 'p (list no-hyphens-attr) text-args))))
+
+(module+ test
+  (check-txexprs-equal? ◊hanging-topic["Topic name"]{One-line explanation}
+                        '(div ((class "hanging-topic") (hyphens "none")) "Topic name"
+                              (p ((hyphens "none")) "One-line explanation"))))
+
+
+#|
+`quick-table`: make little HTML tables with simplified notation
+
+  ◊quick-table{heading left | heading center | heading right
+               upper left | upper center | upper right
+               lower left | lower center | lower right}
+
+In HTML, wrapping every paragraph in <p> tags is a terrible and dull task.
+But formatting tables is even worse.
+
+This function lets you make simple tables using "|" to signify columns,
+and line breaks to signify rows.
+
+Let's uncork a few more whizzy Racket commands while we're at it.
+
+This function assumes that each row has the same number of columns.
+You could improve it to fill in blank cells in rows that need them.
+
+|#
+
+(define (quick-table . text-args)
+  
+  ;; In Pollen, a multiline text-args block arrives as a list of lines and linebreak characters.
+  ;; (A situation we already encountered in `detect-list-items`.)
+  (define rows-of-text-cells
+    (let ([text-rows (filter-not whitespace? text-args)]) ; throw out the linebreak characters
+      
+      ;; `for/list` is very handy: a `for` loop that gathers the results into a list.
+      ;; Think of it as a more flexible version of `map`.
+      (for/list ([text-row (in-list text-rows)])
+                ;; the cells are delimited within a row by "|", so split on this char
+                (for/list ([text-cell (in-list (string-split text-row "|"))])
+                          (string-trim text-cell))))) ; trim remaining whitespace from cell text
+  
+  ;; Racket's `match` functions are very useful.
+  ;; Among other things, they can be used for Python-style data unpacking.
+  ;; The expression on the right will produce three tag functions;
+  ;; the `match-define` assigns them to three new identifiers.
+  (match-define (list tr-tag td-tag th-tag) (map make-default-tag-function '(tr td th)))
+  
+  ;; now we'll take our rows of text cells and apply cell-level HTML tags.
+  ;; the first row will get 'th tags; the other rows get 'td tags.
+  (define html-rows
+    ;; another use of `match`. Notice how this `cons` is used to separate a list into parts ...
+    (match-let ([(cons header-row other-rows) rows-of-text-cells])
+      ;; ... whereas this `cons` is used to combine parts into a list
+      (cons (map th-tag header-row)
+            (for/list ([row (in-list other-rows)])
+                      (map td-tag row)))))
+  
+  ;; With the cells tagged up, add the row tags and finally the table tag.
+  ;; Notice that we use `apply` with `tr-tag` to unpack the list of cells in each html-row.
+  ;; Remember that `apply` does something very simple:
+  ;; Converts an expression of the form `(apply func (list arg1 arg2 ...))`
+  ;; Into `(func arg1 arg2 ...)`
+  (cons 'table (for/list ([html-row (in-list html-rows)])
+                         (apply tr-tag html-row))))
+
+(module+ test
+  (check-txexprs-equal?
+   ◊(quick-table "heading-one | heading-two" "\n"
+                 "   three | four" "\n"
+                 "five | six   ")
+   '(table (tr (th "heading-one") (th "heading-two"))
+           (tr (td "three") (td "four"))
+           (tr (td "five") (td "six")))))
+
+
+(define (pdf-thumbnail-link pdf-pathstring)
+  (define img-extension "gif")
+  (define img-pathstring (->string (add-ext (remove-ext pdf-pathstring) img-extension)))
+  (define sips-command
+    (format "sips -Z 2000 -s format ~a --out '~a' '~a' > /dev/null"
+            img-extension img-pathstring pdf-pathstring))
+  (let ([result (system sips-command)])
+    (if result
+        (link pdf-pathstring `(img ((src ,img-pathstring))))
+        (error 'pdf-thumbnail-link "sips failed"))))
+
+
+
+(define (pdf-thumbnail-link-from-metas metas)
+  (define-values (dir fn _) (split-path (add-ext (remove-ext* (hash-ref metas 'here-path)) "pdf")))
+  (pdf-thumbnail-link (->string fn)))
+
+(define (before-and-after-pdfs base-name)
+  `(div 
+    (div ((class "pdf-thumbnail"))
+         "before" (br)
+         ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-before.pdf" base-name)))
+    (div ((class "pdf-thumbnail"))
+         "after" (br)
+         ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-after.pdf" base-name)))))
+
+(define (alternate-after-pdf base-name)
+  `(div ((class "pdf-thumbnail"))
+        "after (alternate)" (br)
+        ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-after-alternate.pdf" base-name))))
+
+
+
+(define (root . xs)
+  ;; process paragraphs first so that they're treated as block-txexprs in next phase.
+  (define elements-with-paragraphs (decode-elements xs #:txexpr-elements-proc detect-paragraphs)) 
+  `(div ((id "doc")) ,@(decode-elements elements-with-paragraphs
+                                        #:block-txexpr-proc hyphenate-block
+                                        ;; `hangable-quotes` doesn't return a string, so do it last
+                                        #:string-proc (compose1 hangable-quotes
+                                                                fix-em-dashes
+                                                                smart-quotes)
+                                        #:exclude-tags '(style script))))
+
 
 (define (hyphenate-block block-tx)
   ;; attach hyphenate as a block processor rather than string processor
@@ -661,6 +864,7 @@ But to be safe, we'll raise an arity error if we get too many arguments.
              #:min-left-length 3
              #:min-right-length 3
              #:omit-txexpr no-hyphens?))
+
 
 (define (hangable-quotes str)
   (define strs (regexp-match* #px"\\s?[“‘]" str #:gap-select? #t))
@@ -685,44 +889,40 @@ But to be safe, we'll raise an arity error if we get too many arguments.
          [str (regexp-replace* #px"—[\u00A0\u2009\\s](?=\\w)" str "—")])
     str))
 
-(define (root . xs)
-  ;; process paragraphs first so that they're treated as block-txexprs in next phase.
-  (define elements-with-paragraphs (decode-elements xs #:txexpr-elements-proc detect-paragraphs)) 
-  `(div ((id "doc")) ,@(decode-elements elements-with-paragraphs
-                                        #:block-txexpr-proc hyphenate-block
-                                        ;; `hangable-quotes` doesn't return a string, so do it last
-                                        #:string-proc (compose1 hangable-quotes
-                                                                fix-em-dashes
-                                                                smart-quotes)
-                                        #:exclude-tags '(style script))))
 
+
+#|
+ `capitalize-first-letter`: utility function for use in HTML templates.
+ |#
+(define (capitalize-first-letter str)
+  (regexp-replace #rx"^." str string-upcase))
+
+(module+ test
+  (check-equal? (capitalize-first-letter "foo dog") "Foo dog"))
+
+
+#|
+ Miscellaneous tag functions. Obvious at this point what they do.
+ |#
+(define omission (make-default-tag-function 'div #:class "omission"))
+
+(define mono (make-default-tag-function 'span #:class "mono"))
+
+(define font-details (make-default-tag-function 'div #:class "font-details"))
+
+(define mb-font-specimen
+  (make-default-tag-function 'div #:class "mb-font-specimen" #:contenteditable "true"))
+
+(define (margin-note . xs)
+  `(div ((class "margin-note") ,no-hyphens-attr) ,@xs))
+
+(define os (make-default-tag-function 'span #:class "os"))
 
 (define (gap [size 1.5])
   `(div ((style ,(format "height: ~arem" size)))))
 
 (define (center . xs)
   `(div ((style "text-align:center")) ,@xs))
-(define (map-tag tag-name elems)
-  (map (curry list tag-name) elems))
-
-(define (map-splicing-tag tag-name elems)
-  (map (curry cons tag-name) elems))
-
-(define (tabulate celled-rows)
-  (define header-row (car celled-rows))
-  (define other-rows (cdr celled-rows))
-  `(table ,@(map-splicing-tag 'tr
-                              (cons
-                               (map-tag 'th header-row)
-                               (for/list ([celled-row (in-list other-rows)])
-                                         (map-tag 'td celled-row))))))
-
-(define (quick-table . xs)
-  (define rows (filter-not whitespace? xs))
-  (define celled-rows
-    (for/list ([row (in-list rows)])
-              (map (λ(cell) (string-trim cell)) (string-split row "|"))))
-  (tabulate celled-rows))
 
 (define (indented #:hyphenate [hyphenate #t]  . xs)
   `(p ((class "indented"),@(if (not hyphenate) (list no-hyphens-attr) null)) ,@xs))
@@ -736,53 +936,6 @@ But to be safe, we'll raise an arity error if we get too many arguments.
           (tr (td ((style "text-align:left")) ,@xs) (td  ,(caption name)))))
 
 
-(define mono (make-default-tag-function 'span #:class "mono"))
 
 
 
-(define/contract (pdf-thumbnail-link pdf-pathstring)
-  (path-string? . -> . any/c)
-  (define img-extension "gif")
-  (define img-pathstring (->string (add-ext (remove-ext pdf-pathstring) img-extension)))
-  (define sips-command
-    (format "sips -Z 2000 -s format ~a --out '~a' '~a' > /dev/null"
-            img-extension img-pathstring pdf-pathstring))
-  (let ([result (system sips-command)])
-    (if result
-        (link pdf-pathstring `(img ((src ,img-pathstring))))
-        (error 'pdf-thumbnail-link "sips failed"))))
-
-(define (pdf-thumbnail-link-from-metas metas)
-  (define-values (dir fn _) (split-path (add-ext (remove-ext* (hash-ref metas 'here-path)) "pdf")))
-  (pdf-thumbnail-link (->string fn)))
-
-(define (before-and-after-pdfs base-name)
-  `(div 
-    (div ((class "pdf-thumbnail"))
-         "before" (br)
-         ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-before.pdf" base-name)))
-    (div ((class "pdf-thumbnail"))
-         "after" (br)
-         ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-after.pdf" base-name)))))
-
-(define (alternate-after-pdf base-name)
-  `(div ((class "pdf-thumbnail"))
-        "after (alternate)" (br)
-        ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-after-alternate.pdf" base-name))))
-
-(define (random-select . xs)
-  (list-ref xs (random (length xs))))
-
-(define font-details (make-default-tag-function 'div #:class "font-details"))
-
-(define mb-font-specimen
-  (make-default-tag-function 'div #:class "mb-font-specimen" #:contenteditable "true"))
-
-(define (margin-note . xs)
-  `(div ((class "margin-note") ,no-hyphens-attr) ,@xs))
-
-(define os (make-default-tag-function 'span #:class "os"))
-
-
-(define (capitalize-first-letter str)
-  (regexp-replace #rx"^." str string-upcase))
