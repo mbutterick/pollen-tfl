@@ -2,6 +2,7 @@
 @(require scribble/manual) 
 @(require (for-label racket txexpr sugar pollen/decode pollen/tag hyphenate) scribble/eval)
 @(define my-eval (make-base-eval))
+ @declare-exporting[pollen-tfl/pollen] 
 @(my-eval '(require txexpr sugar racket/list))
 
 @title[#:style manual-doc-style]{pollen.rkt} 
