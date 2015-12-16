@@ -641,9 +641,9 @@ But to be safe, we'll raise an arity error if we get too many arguments.
 
 (module+ test
   (check-txexprs-equal? ◊xref{target}
-                        '(a ((class "xref") (href "target.html") (hyphens "none")) "target"))
+                        `(a ((class "xref") (href "target.html") ,no-hyphens-attr) "target"))
   (check-txexprs-equal? ◊xref["url"]{target}
-                        '(a ((class "xref") (href "url") (hyphens "none")) "target"))
+                        `(a ((class "xref") (href "url") ,no-hyphens-attr) "target"))
   (check-exn exn:fail:contract:arity? (λ _ (xref "url" "target" "spurious-third-argument"))))
 
 
@@ -705,9 +705,9 @@ with arguments that will be filled in when you invoke the macro.
 |#
 (define-syntax-rule (define-heading heading-name tag)
   ; first, heading-name is used as an identifier
-  (define (heading-name . text-args)
+  (define heading-name
     ; then it's used as a symbol that is converted to a string.
-    (list* tag (list `(class ,(~a 'heading-name)) no-hyphens-attr) text-args))) 
+    (make-default-tag-function tag #:class (symbol->string 'heading-name))))
 
 (define-heading topic 'h3)
 (define-heading subhead 'h3)
@@ -717,15 +717,15 @@ with arguments that will be filled in when you invoke the macro.
 
 (module+ test
   (check-txexprs-equal? ◊topic{foo}
-                        '(h3 ((class "topic") (hyphens "none")) "foo"))
+                        '(h3 ((class "topic")) "foo"))
   (check-txexprs-equal? ◊subhead{foo}
-                        '(h3 ((class "subhead") (hyphens "none")) "foo"))
+                        '(h3 ((class "subhead")) "foo"))
   (check-txexprs-equal? ◊font-headline{foo}
-                        '(h3 ((class "font-headline") (hyphens "none")) "foo"))
+                        '(h3 ((class "font-headline")) "foo"))
   (check-txexprs-equal? ◊section{foo}
-                        '(h2 ((class "section") (hyphens "none")) "foo"))
+                        '(h2 ((class "section")) "foo"))
   (check-txexprs-equal? ◊chapter{foo}
-                        '(h1 ((class "chapter") (hyphens "none")) "foo")))
+                        '(h1 ((class "chapter")) "foo")))
 
 #|
 `define-heading-from-metas`: macro for defining a function that makes a heading
@@ -759,11 +759,11 @@ For fun, I used Pollen notation inside the macro just to show you that it will w
 (module+ test
   (let ([my-fake-metas (hash 'title "Fake Title" 'white "noise")])
     (check-txexprs-equal? ◊topic-from-metas[my-fake-metas]
-                          '(h3 ((class "topic") (hyphens "none")) "Fake Title"))
+                          '(h3 ((class "topic")) "Fake Title"))
     (check-txexprs-equal? ◊section-from-metas[my-fake-metas]
-                          '(h2 ((class "section") (hyphens "none")) "Fake Title"))
+                          '(h2 ((class "section")) "Fake Title"))
     (check-txexprs-equal? ◊chapter-from-metas[my-fake-metas]
-                          '(h1 ((class "chapter") (hyphens "none")) "Fake Title"))))
+                          '(h1 ((class "chapter")) "Fake Title"))))
 
 #|
 `hanging-topic`: convert a topic + subhead into one HTML markup unit
@@ -777,8 +777,8 @@ For fun, I used Pollen notation inside the macro just to show you that it will w
 
 (module+ test
   (check-txexprs-equal? ◊hanging-topic["Topic name"]{One-line explanation}
-                        '(div ((class "hanging-topic") (hyphens "none")) "Topic name"
-                              (p ((hyphens "none")) "One-line explanation"))))
+                        `(div ((class "hanging-topic") ,no-hyphens-attr) "Topic name"
+                              (p (,no-hyphens-attr) "One-line explanation"))))
 
 
 #|
@@ -848,6 +848,17 @@ You could improve it to fill in blank cells in rows that need them.
            (tr (td "five") (td "six")))))
 
 #|
+`pdf-thumbnail-link`: create a thumbnail of a PDF that links to the PDF
+
+This function will only work properly if you have `sips` on your system
+(command-line image-processing program, included with OS X).
+
+This shows how you can fold other kinds of project housekeeping into Pollen commands.
+Here, the function generates the thumbnail it needs when the page is compiled.
+
+One disadvantage of this approach is that the thumbnail will *always* be generated on recompile,
+though you could put in some logic to avoid this (e.g., check the modification date of the PDF).
+In this case, `sips` is fast enough that it's not bothersome.
 
 |#
 (define (pdf-thumbnail-link pdf-pathstring)
@@ -856,12 +867,16 @@ You could improve it to fill in blank cells in rows that need them.
   (define sips-command
     (format "sips -Z 2000 -s format ~a --out '~a' '~a' > /dev/null"
             img-extension img-pathstring pdf-pathstring))
-  (if (system sips-command)
-        (link pdf-pathstring `(img ((src ,img-pathstring))))
-        (error 'pdf-thumbnail-link "sips failed")))
+  ◊link[pdf-pathstring]{◊(if (system sips-command)
+                             `(img ((src ,img-pathstring)))
+                             ;; usually one would raise an error on the next line,
+                             ;; but for instructional purposes, we'll have a graceful fail
+                             "sips not available")})
 
 
-
+#|
+A few convenience variants of `pdf-thumbnail-link`
+|#
 (define (pdf-thumbnail-link-from-metas metas)
   (define-values (dir fn _) (split-path (add-ext (remove-ext* (hash-ref metas 'here-path)) "pdf")))
   (pdf-thumbnail-link (->string fn)))
@@ -881,35 +896,71 @@ You could improve it to fill in blank cells in rows that need them.
         ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-after-alternate.pdf" base-name))))
 
 
+#|
+`root`: decode page content
 
-(define (root . xs)
-  ;; process paragraphs first so that they're treated as block-txexprs in next phase.
-  (define elements-with-paragraphs (decode-elements xs #:txexpr-elements-proc detect-paragraphs)) 
-  `(div ((id "doc")) ,@(decode-elements elements-with-paragraphs
-                                        #:block-txexpr-proc hyphenate-block
-                                        ;; `hangable-quotes` doesn't return a string, so do it last
-                                        #:string-proc (compose1 hangable-quotes
-                                                                fix-em-dashes
-                                                                smart-quotes)
-                                        #:exclude-tags '(style script))))
+In a Pollen markup source, the output is a tagged X-expression that starts with `root`:
 
+  (root (div ((class "headline")) "Page title") ...)
 
+Recall that every Pollen tag calls a function with the same name (if it exists, otherwise it just
+becomes a tag). This is also true of `root`.
+
+`root` has slightly special status inasmuch as it is the top tag of the X-expression,
+and thus the last tag function that will get called. Therefore, `root` is a good place to put any
+processing that should happen once all the page content has been filled in.
+
+Often, you'll want to use a `decode` function, which can recursively perform different kinds of
+processing on different types of page elements.
+
+|#
+(define (root . elems)
+  ;; We will do the decoding in two steps.
+  ;; Detect paragraphs first so that they're treated as block-txexprs in next phase.
+  (define elements-with-paragraphs (decode-elements elems #:txexpr-elements-proc detect-paragraphs))
+  ;; Then do the rest of the decoding normally.
+  (list* 'div '((id "doc"))
+         (decode-elements elements-with-paragraphs
+                          #:block-txexpr-proc hyphenate-block
+                          #:string-proc (compose1 make-quotes-hangable
+                                                  fix-em-dashes
+                                                  smart-quotes)
+                          #:exclude-tags '(style script))))
+
+#|
+`hyphenate-block`: helper function for root decoder 
+|#
 (define (hyphenate-block block-tx)
-  ;; attach hyphenate as a block processor rather than string processor
-  ;; so that attrs can be inspected for "no-hyphens" flag.
+  ;; The basic `hyphenate` function comes from the `hyphenate` module.
+  ;; We could attach `hyphenate` to our decoder as a string processor rather than block processor.
+  ;; But we want to be able to handle our "no-hyphens" flag (aka `no-hyphens-attr`).
+  ;; So we want to look at blocks, not strings.
   (define (no-hyphens? tx)
-    (or (member (get-tag tx) '(th h1 h2 h3 h4 style script))
-        (member no-hyphens-attr (get-attrs tx))))
+    (or (member (get-tag tx) '(th h1 h2 h3 h4 style script)) ; don't hyphenate these, no matter what
+        (member no-hyphens-attr (get-attrs tx)))) ; also don't hyphenate blocks with `no-hyphens-attr`
   (hyphenate block-tx
              #:min-left-length 3
              #:min-right-length 3
              #:omit-txexpr no-hyphens?))
 
+(module+ test
+  (check-txexprs-equal? (hyphenate-block `(div "snowman" (span (,no-hyphens-attr) "snowman")))
+                        `(div "snow\u00ADman" (span (,no-hyphens-attr) "snowman"))))
 
-(define (hangable-quotes str)
-  (define strs (regexp-match* #px"\\s?[“‘]" str #:gap-select? #t))
-  (if (= (length strs) 1) ; no submatches
-      (car strs)
+#|
+`make-quotes-hangable`: perform tricky processing on quotation marks.
+
+Because I'm a typography snob I like to push quotation marks into the margin a little bit
+when they appear at the left edge of a line (aka "hanging quotes").
+
+This function just wraps left-hand quote marks in two little tags ("push" and "pull")
+that I can then manipulate in CSS to get the effect.
+|#
+(define (make-quotes-hangable str)
+  ;; using `regexp-match*` with #:gap-select? makes it act like a funny kind of string splitter
+  (define substrs (regexp-match* #px"\\s?[“‘]" str #:gap-select? #t))
+  (if (= (length substrs) 1) ; no submatches
+      (car substrs)
       (cons 'quo (append-map (λ(str)
                                (let ([strlen (string-length str)])
                                  (if (> strlen 0)
@@ -917,19 +968,27 @@ You could improve it to fill in blank cells in rows that need them.
                                        [("‘") (list '(squo-push) `(squo-pull ,str))]
                                        [("“") (list '(dquo-push) `(dquo-pull ,str))]
                                        [else (list str)])
-                                     (list str)))) strs))))
+                                     (list str)))) substrs))))
 
+(module+ test
+  (check-txexprs-equal? (make-quotes-hangable "“Who is it?”")
+                        '(quo "" (dquo-push) (dquo-pull "“") "Who is it?”")))
 
+#|
+`fix-em-dashes`: helper function for root decoder
+
+When I type an em dash in my sources, I will often leave a space around it,
+but I don't want spaces in the output, so this function removes them.
+|#
 (define (fix-em-dashes str)
-  ;; remove word spaces around em dashes where necessary.
-  ;; replace with thin spaces.
-  ;; \u00A0 = nbsp, \u2009 = thinsp (neither included in \s) 
-  
+  ;; \u00A0 = nbsp, \u2009 = thinsp (neither included in \s)   
   (let* ([str (regexp-replace* #px"(?<=\\w)[\u00A0\u2009\\s]—" str "—")]
          [str (regexp-replace* #px"—[\u00A0\u2009\\s](?=\\w)" str "—")])
     str))
 
-
+(module+ test
+  (check-equal? (fix-em-dashes "Hey — you!") "Hey—you!")
+  (check-equal? (fix-em-dashes "Hey—you!") "Hey—you!"))
 
 #|
  `capitalize-first-letter`: utility function for use in HTML templates.
@@ -974,8 +1033,3 @@ You could improve it to fill in blank cells in rows that need them.
 (define (captioned name . xs)
   `(table ((class "captioned indented"))
           (tr (td ((style "text-align:left")) ,@xs) (td  ,(caption name)))))
-
-
-
-
-
