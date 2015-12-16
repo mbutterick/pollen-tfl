@@ -28,8 +28,7 @@ already be available.
        <provides>
        <dev-mode>
        <values>
-       <link>
-       <test-start>]
+       <link>]
 
 @chunk[<req>
        (require
@@ -254,10 +253,9 @@ incorporates everything else already in the source file. Moreover, all of our `m
 will be combined into a single submodule.
 
 @chunk[<test-start>
-(error 'boing)
         (module+ test
  (require rackunit txexpr) ;; always include this at the start of the test submodule
- 
+          
  ;; We use `check-txexprs-equal?` rather than `check-equal?` because it's a little more lenient:
  ;; it allows the attributes of two txexprs to be in a different order,
  ;; yet still be considered equal (because ordering of attributes is not semantically significant).
