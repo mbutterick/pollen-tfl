@@ -623,14 +623,7 @@ For fun, I used Pollen notation inside the macro just to show you that it will w
 (define-heading-from-metas section)
 (define-heading-from-metas chapter)
 
-(module+ test
-  (let ([my-fake-metas (hash 'title "Fake Title" 'white "noise")])
-    (check-txexprs-equal? ◊topic-from-metas[my-fake-metas]
-                          '(h3 ((class "topic")) "Fake Title"))
-    (check-txexprs-equal? ◊section-from-metas[my-fake-metas]
-                          '(h2 ((class "section")) "Fake Title"))
-    (check-txexprs-equal? ◊chapter-from-metas[my-fake-metas]
-                          '(h1 ((class "chapter")) "Fake Title"))))
+
 
 #|
 `hanging-topic`: convert a topic + subhead into one HTML markup unit
@@ -642,10 +635,7 @@ For fun, I used Pollen notation inside the macro just to show you that it will w
   (make-txexpr 'div (list '(class "hanging-topic") no-hyphens-attr)
                (list topic-xexpr (list* 'p (list no-hyphens-attr) text-args))))
 
-(module+ test
-  (check-txexprs-equal? ◊hanging-topic["Topic name"]{One-line explanation}
-                        `(div ((class "hanging-topic") ,no-hyphens-attr) "Topic name"
-                              (p (,no-hyphens-attr) "One-line explanation"))))
+
 
 
 #|
@@ -705,14 +695,7 @@ You could improve it to fill in blank cells in rows that need them.
   (cons 'table (for/list ([html-row (in-list html-rows)])
                          (apply tr-tag html-row))))
 
-(module+ test
-  (check-txexprs-equal?
-   ◊(quick-table "heading-one | heading-two" "\n"
-                 "   three | four" "\n"
-                 "five | six   ")
-   '(table (tr (th "heading-one") (th "heading-two"))
-           (tr (td "three") (td "four"))
-           (tr (td "five") (td "six")))))
+
 
 #|
 `pdf-thumbnail-link`: create a thumbnail of a PDF that links to the PDF
@@ -810,9 +793,7 @@ processing on different types of page elements.
              #:min-right-length 3
              #:omit-txexpr no-hyphens?))
 
-(module+ test
-  (check-txexprs-equal? (hyphenate-block `(div "snowman" (span (,no-hyphens-attr) "snowman")))
-                        `(div "snow\u00ADman" (span (,no-hyphens-attr) "snowman"))))
+
 
 #|
 `make-quotes-hangable`: perform tricky processing on quotation marks.
@@ -837,9 +818,7 @@ that I can then manipulate in CSS to get the effect.
                                        [else (list str)])
                                      (list str)))) substrs))))
 
-(module+ test
-  (check-txexprs-equal? (make-quotes-hangable "“Who is it?”")
-                        '(quo "" (dquo-push) (dquo-pull "“") "Who is it?”")))
+
 
 #|
 `fix-em-dashes`: helper function for root decoder
@@ -853,9 +832,7 @@ but I don't want spaces in the output, so this function removes them.
          [str (regexp-replace* #px"—[\u00A0\u2009\\s](?=\\w)" str "—")])
     str))
 
-(module+ test
-  (check-equal? (fix-em-dashes "Hey — you!") "Hey—you!")
-  (check-equal? (fix-em-dashes "Hey—you!") "Hey—you!"))
+
 
 #|
  `capitalize-first-letter`: utility function for use in HTML templates.
@@ -863,8 +840,7 @@ but I don't want spaces in the output, so this function removes them.
 (define (capitalize-first-letter str)
   (regexp-replace #rx"^." str string-upcase))
 
-(module+ test
-  (check-equal? (capitalize-first-letter "foo dog") "Foo dog"))
+
 
 
 #|

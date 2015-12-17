@@ -21,33 +21,7 @@ file and see how they affect the output.
 We could avoid the next @racket[require] if we were using @|lang| @racketmodname[racket], because these libraries would
 already be available.
 
-@chunk[<*>
-       <req>
-       <req2>
-       <provides>
-       <dev-mode>
-       <values>
-       <link>
-       <buy-book-link>
-       <image>
-       <div-scale>
-       <font-scale>
-       <home-image>
-       <home-overlay>
-       <glyph>
-       <image-wrapped>
-       <detect-list-items>
-       <make-list-function>
-       <bullet-list>
-       <numbered-list>
-       <btw>
-       <xref>
-       <target->url>
-       <xref-font>
-       <define-heading>
-       <headings>
-       <define-heading-from-metas>
-       ]
+
 
 @chunk[<req>
        (require
@@ -670,40 +644,40 @@ Macro for defining a function that makes a heading by relying on data in the met
  #'(define (heading-from-metas metas)
  (heading-name (hash-ref metas meta-key-for-page-title))))]))]
 
-@;|{
 
- 
- (define-heading-from-metas topic)
+@deftogether[(
+@defproc[
+(topic-from-metas [metas hash?])
+txexpr?]
+@defproc[
+(section-from-metas [metas hash?])
+txexpr?]
+@defproc[
+(chapter-from-metas [metas hash?])
+txexpr?])]
+
+ @chunk[<headings-from-metas>
+  (define-heading-from-metas topic)
  (define-heading-from-metas section)
- (define-heading-from-metas chapter)
+ (define-heading-from-metas chapter)]
+
+@defproc[
+(hanging-topic
+[topic-xexpr xexpr?]
+[pollen-args (listof xexpr?)] ...)
+txexpr?]
+Convert a topic + subhead into one HTML markup unit
  
- (module+ test
- (let ([my-fake-metas (hash 'title "Fake Title" 'white "noise")])
- (check-txexprs-equal? ◊topic-from-metas[my-fake-metas]
- '(h3 ((class "topic")) "Fake Title"))
- (check-txexprs-equal? ◊section-from-metas[my-fake-metas]
- '(h2 ((class "section")) "Fake Title"))
- (check-txexprs-equal? ◊chapter-from-metas[my-fake-metas]
- '(h1 ((class "chapter")) "Fake Title"))))
- 
- #|
- @racket[hanging-topic]: convert a topic + subhead into one HTML markup unit
- 
- ◊hanging-topic["Topic name"]{One-line explanation}
- 
- |#
- (define (hanging-topic topic-xexpr . text-args)
+@chunk[<hanging-topic>
+ (define (hanging-topic topic-xexpr . pollen-args)
  (txexpr 'div (list '(class "hanging-topic") no-hyphens-attr)
- (list topic-xexpr (list* 'p (list no-hyphens-attr) text-args))))
- 
- (module+ test
- (check-txexprs-equal? ◊hanging-topic["Topic name"]{One-line explanation}
- `(div ((class "hanging-topic") ,no-hyphens-attr) "Topic name"
- (p (,no-hyphens-attr) "One-line explanation"))))
- 
- 
- #|
- @racket[quick-table]: make little HTML tables with simplified notation
+ (list topic-xexpr (list* 'p (list no-hyphens-attr) pollen-args))))]
+
+@defproc[
+(quick-table
+[table-rows (listof xexpr?)] ...)
+txexpr?]
+Make an HTML table using simplified notation
  
  ◊quick-table{heading left | heading center | heading right
  upper left | upper center | upper right
@@ -719,9 +693,9 @@ Macro for defining a function that makes a heading by relying on data in the met
  
  This function assumes that each row has the same number of columns.
  You could improve it to fill in blank cells in rows that need them.
- 
- |#
- 
+
+
+@chunk[<quick-table>
  (define (quick-table . text-args)
  
  ;; In Pollen, a multiline text-args block arrives as a list of lines and linebreak characters.
@@ -757,20 +731,14 @@ Macro for defining a function that makes a heading by relying on data in the met
  ;; Converts an expression of the form @racket[(apply func (list arg1 arg2 ...))]
  ;; Into @racket[(func arg1 arg2 ...)]
  (cons 'table (for/list ([html-row (in-list html-rows)])
- (apply tr-tag html-row))))
- 
- (module+ test
- (check-txexprs-equal?
- ◊(quick-table "heading-one | heading-two" "\n"
- "   three | four" "\n"
- "five | six   ")
- '(table (tr (th "heading-one") (th "heading-two"))
- (tr (td "three") (td "four"))
- (tr (td "five") (td "six")))))
- 
- #|
- @racket[pdf-thumbnail-link]: create a thumbnail of a PDF that links to the PDF
- 
+ (apply tr-tag html-row))))]
+
+@defproc[
+(pdf-thumbnail
+[pdf-path path-string?])
+txexpr?]
+Create a thumbnail of a PDF that links to the PDF.
+
  This function will only work properly if you have @racket[sips] on your system
  (command-line image-processing program, included with OS X).
  
@@ -780,24 +748,37 @@ Macro for defining a function that makes a heading by relying on data in the met
  One disadvantage of this approach is that the thumbnail will *always* be generated on recompile,
  though you could put in some logic to avoid this (e.g., check the modification date of the PDF).
  In this case, @racket[sips] is fast enough that it's not bothersome.
- 
- |#
- (define (pdf-thumbnail-link pdf-pathstring)
+
+ @chunk[<pdf-thumbnail>
+  (define (pdf-thumbnail-link pdf-pathstring)
  (define img-extension "gif")
  (define img-pathstring (->string (add-ext (remove-ext pdf-pathstring) img-extension)))
  (define sips-command
  (format "sips -Z 2000 -s format ~a --out '~a' '~a' > /dev/null"
  img-extension img-pathstring pdf-pathstring))
- ◊link[pdf-pathstring]{◊(if (system sips-command)
+ (link pdf-pathstring (if (system sips-command)
  `(img ((src ,img-pathstring)))
  ;; usually one would raise an error on the next line,
  ;; but for instructional purposes, we'll have a graceful fail
- "sips not available")})
- 
- 
- #|
- A few convenience variants of @racket[pdf-thumbnail-link]
- |#
+ "sips not available")))]
+
+@deftogether[(
+@defproc[
+(pdf-thumbnail-link-from-metas
+[metas hash?])
+txexpr?]
+@defproc[
+(before-and-after-pdfs
+[base-name string?])
+txexpr?]
+@defproc[
+(alternate-after-pdf
+[base-name string?])
+txexpr?]
+)]
+A few convenience variants of @racket[pdf-thumbnail-link]
+
+ @chunk[<pdf-thumbnail-variants>
  (define (pdf-thumbnail-link-from-metas metas)
  (define-values (dir fn _) (split-path (add-ext (remove-ext* (hash-ref metas 'here-path)) "pdf")))
  (pdf-thumbnail-link (->string fn)))
@@ -814,11 +795,13 @@ Macro for defining a function that makes a heading by relying on data in the met
  (define (alternate-after-pdf base-name)
  `(div ((class "pdf-thumbnail"))
  "after (alternate)" (br)
- ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-after-alternate.pdf" base-name))))
- 
- 
- #|
- @racket[root]: decode page content
+ ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-after-alternate.pdf" base-name))))]
+
+@defproc[
+(root
+[pollen-args (listof txexpr?)] ...)
+txexpr?]
+Decode page content
  
  In a Pollen markup source, the output is a tagged X-expression that starts with @racket[root]:
  
@@ -833,8 +816,8 @@ Macro for defining a function that makes a heading by relying on data in the met
  
  Often, you'll want to use a @racket[decode] function, which can recursively perform different kinds of
  processing on different types of page elements.
- 
- |#
+
+@chunk[<root>
  (define (root . elems)
  ;; We will do the decoding in two steps.
  ;; Detect paragraphs first so that they're treated as block-txexprs in next phase.
@@ -846,11 +829,15 @@ Macro for defining a function that makes a heading by relying on data in the met
  #:string-proc (compose1 make-quotes-hangable
  fix-em-dashes
  smart-quotes)
- #:exclude-tags '(style script))))
- 
- #|
- @racket[hyphenate-block]: helper function for root decoder 
- |#
+ #:exclude-tags '(style script))))]
+
+@defproc[
+(hyphenate-block
+[block-tx txexpr?])
+txexpr?]
+Helper function for root decoder 
+
+@chunk[<hyphenate-block>
  (define (hyphenate-block block-tx)
  ;; The basic @racket[hyphenate] function comes from the @racket[hyphenate] module.
  ;; We could attach @racket[hyphenate] to our decoder as a string processor rather than block processor.
@@ -862,21 +849,21 @@ Macro for defining a function that makes a heading by relying on data in the met
  (hyphenate block-tx
  #:min-left-length 3
  #:min-right-length 3
- #:omit-txexpr no-hyphens?))
- 
- (module+ test
- (check-txexprs-equal? (hyphenate-block `(div "snowman" (span (,no-hyphens-attr) "snowman")))
- `(div "snow\u00ADman" (span (,no-hyphens-attr) "snowman"))))
- 
- #|
- @racket[make-quotes-hangable]: perform tricky processing on quotation marks.
+ #:omit-txexpr no-hyphens?))]
+
+@defproc[
+(make-quotes-hangable
+[str string?])
+txexpr?]
+Perform tricky processing on quotation marks.
  
  Because I'm a typography snob I like to push quotation marks into the margin a little bit
  when they appear at the left edge of a line (aka "hanging quotes").
  
  This function just wraps left-hand quote marks in two little tags ("push" and "pull")
  that I can then manipulate in CSS to get the effect.
- |#
+
+@chunk[<make-quotes-hangable>
  (define (make-quotes-hangable str)
  ;; using @racket[regexp-match*] with #:gap-select? makes it act like a funny kind of string splitter
  (define substrs (regexp-match* #px"\\s?[“‘]" str #:gap-select? #t))
@@ -889,41 +876,39 @@ Macro for defining a function that makes a heading by relying on data in the met
  [("‘") (list '(squo-push) `(squo-pull ,str))]
  [("“") (list '(dquo-push) `(dquo-pull ,str))]
  [else (list str)])
- (list str)))) substrs))))
- 
- (module+ test
- (check-txexprs-equal? (make-quotes-hangable "“Who is it?”")
- '(quo "" (dquo-push) (dquo-pull "“") "Who is it?”")))
- 
- #|
- @racket[fix-em-dashes]: helper function for root decoder
+ (list str)))) substrs))))]
+
+@defproc[
+(fix-em-dashes
+[str string?])
+txexpr?]
+Helper function for root decoder
  
  When I type an em dash in my sources, I will often leave a space around it,
  but I don't want spaces in the output, so this function removes them.
- |#
- (define (fix-em-dashes str)
+
+ @chunk[<fix-em-dashes>
+  (define (fix-em-dashes str)
  ;; \u00A0 = nbsp, \u2009 = thinsp (neither included in \s)   
  (let* ([str (regexp-replace* #px"(?<=\\w)[\u00A0\u2009\\s]—" str "—")]
  [str (regexp-replace* #px"—[\u00A0\u2009\\s](?=\\w)" str "—")])
- str))
- 
- (module+ test
- (check-equal? (fix-em-dashes "Hey — you!") "Hey—you!")
- (check-equal? (fix-em-dashes "Hey—you!") "Hey—you!"))
- 
- #|
- @racket[capitalize-first-letter]: utility function for use in HTML templates.
- |#
+ str))]
+
+@defproc[
+(capitalize-first-letter
+[str string?])
+string?]
+utility function for use in HTML templates.
+
+ @chunk[<capitalize-first-letter>
  (define (capitalize-first-letter str)
- (regexp-replace #rx"^." str string-upcase))
- 
- (module+ test
- (check-equal? (capitalize-first-letter "foo dog") "Foo dog"))
- 
- 
- #|
- Miscellaneous tag functions. Obvious at this point what they do.
- |#
+ (regexp-replace #rx"^." str string-upcase))]
+
+ @subsubsection{Miscellaneous tag functions}
+
+ Presented without docs or comment, as it should be obvious at this point what they do.
+
+@chunk[<misc-functions>
  (define omission (make-default-tag-function 'div #:class "omission"))
  
  (define mono (make-default-tag-function 'span #:class "mono"))
@@ -953,6 +938,51 @@ Macro for defining a function that makes a heading by relying on data in the met
  
  (define (captioned name . xs)
  `(table ((class "captioned indented"))
- (tr (td ((style "text-align:left")) ,@xs) (td  ,(caption name)))))
+ (tr (td ((style "text-align:left")) ,@xs) (td  ,(caption name)))))]
+
+@;|{
+ #|
+ |#
+
  
  }|
+
+
+ @chunk[<*>
+       <req>
+       <req2>
+       <provides>
+       <dev-mode>
+       <values>
+       <link>
+       <buy-book-link>
+       <image>
+       <div-scale>
+       <font-scale>
+       <home-image>
+       <home-overlay>
+       <glyph>
+       <image-wrapped>
+       <detect-list-items>
+       <make-list-function>
+       <bullet-list>
+       <numbered-list>
+       <btw>
+       <xref>
+       <target->url>
+       <xref-font>
+       <define-heading>
+       <headings>
+       <define-heading-from-metas>
+       <headings-from-metas>
+       <hanging-topic>
+       <quick-table>
+       <pdf-thumbnail>
+       <pdf-thumbnail-variants>
+       <root>
+       <hyphenate-block>
+       <make-quotes-hangable>
+       <fix-em-dashes>
+       <capitalize-first-letter>
+       <misc-functions>
+       ]
