@@ -22,7 +22,7 @@ will be combined into a single submodule.
 |#
 
 (module+ test
-  (require rackunit txexpr "pollen-lp.scrbl") ;; always include this at the start of the test submodule
+  (require rackunit txexpr "pollen.rkt") ;; always include this at the start of the test submodule
   
   ;; We use `check-txexprs-equal?` rather than `check-equal?` because it's a little more lenient:
   ;; it allows the attributes of two txexprs to be in a different order,
