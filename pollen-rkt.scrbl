@@ -1,6 +1,6 @@
 #lang scribble/lp2
 @(require scribble/manual)
-@(require (for-label racket txexpr sugar pollen/decode pollen/tag hyphenate rackunit) scribble/eval)
+@(require (for-label racket txexpr sugar pollen/decode pollen/tag hyphenate rackunit) scribble/eval pollen/scribblings/mb-tools)
 @(define my-eval (make-base-eval))
 @declare-exporting[pollen-tfl/pollen] 
 @(my-eval '(require txexpr sugar racket/list))
@@ -9,21 +9,32 @@
 
 @(define lang @racket[#, @hash-lang[]])
 
-We can write a @filepath{pollen.rkt} file in any @|lang|. @|lang| @racketmodname[racket] is more convenient because it loads more libraries by default. For the same reason, @|lang| @racketmodname[racket/base] — with a minimal set of libraries — is slightly faster to load. In general, the more virtuous habit is @|lang| @racketmodname[racket/base].
+We can write a @filepath{pollen.rkt} file in any @|lang|. Most commonly, that will be is @|lang| @racketmodname[racket/base]. @|lang| @racketmodname[racket] is more convenient because it loads more libraries by default, but as a result it can be slightly slower to load. So @racketmodname[racket/base] is the more virtuous habit.
 
-@racketmodname[pollen/mode] is a metalanguage that adds support for Pollen-mode commands in a source file.
-So instead of @|lang| @racketmodname[racket/base] we write @|lang| @racketmodname[pollen/mode] @racketmodname[racket/base]. @racketmodname[pollen/mode] is optional.
+This particular @filepath{pollen.rkt}, however, is written in @|lang| @racketmodname[scribble/lp2], which is the literate-programming variant of Racket's Scribble documentation language (which is also the basis of Pollen). @racketmodname[scribble/lp2] is like a text-based version of @racketmodname[racket/base]. The "literate programming" angle is that we can mix documentation and source code in one file. Probably not the option you'd choose for your own project, but in this teaching project, it's the right tool for the job.
 
-BTW this file is heavily commented so it can serve as a Pollen learning tool. Rather than just read
-along, you are encouraged to run this project with the project server active, and make changes to this
-file and see how they affect the output.
+Chunks of source code look like this:
 
-We could avoid the next @racket[require] if we were using @|lang| @racketmodname[racket], because these libraries would
-already be available.
+@chunk[<chunk-name>
+  (define (racket-source-code ...) ...)]
+
+There's nothing special about the chunk name — it's just a label that @racketmodname[scribble/lp2] will use to snap the code together @seclink["Finally"]{at the end}. The result is that if you @racket[require] this file normally, you'll get the usual functions and values; but if you run it with Scribble, it turns into the documentation you see here.
+
+@section{What is @filepath{pollen.rkt} for?}
+
+The @filepath{pollen.rkt} source file is the main source of functions and values for the source files in a Pollen project. Everything provided from a @filepath{pollen.rkt} is automatically available to Pollen source files in the
+same directory or subdirectories (unless superseded by another @filepath{pollen.rkt} below, for instance in the @filepath{fonts} subdirectory in this project).
+
+For more, see @secref["Using_the__pollen_rkt__file"
+         #:tag-prefixes '("tutorial-3")
+         #:doc '(lib "pollen/scribblings/pollen.scrbl")] in the main Pollen docs.
 
 
+@section{Imports}
 
-@chunk[<req>
+If we were using @|lang| @racketmodname[racket], these next libraries would already be imported. But because we're using @racketmodname[racket/base] (via @racketmodname[scribble/lp2]), we need to @racket[require] them explicitly.
+
+@chunk[<base-require>
        (require
          (for-syntax racket/base racket/syntax) ; enables macros
          racket/list
@@ -36,48 +47,50 @@ already be available.
 
 Other libraries we'll be using.
 
-@chunk[<req2>
+@chunk[<project-require>
        (require
          sugar
          txexpr
          pollen/decode
          pollen/tag
          hyphenate
-         "../pricing-table.rkt")]
+         "pricing-table.rkt")]
 
 
-Everything provided from a @filepath{pollen.rkt} is automatically available to Pollen source files in the
-same directory or subdirectories (unless superseded by another @filepath{pollen.rkt}, as in the @filepath{fonts} subdirectory).
+@section{Exports}
 
 Note that @racket[all-defined-out] would only export the definitions that are created in this file. To make
 imported definitions available too, we need to re-export them with @racket[all-from-out].
 
 @chunk[<provides>
-       (provide (all-defined-out) (all-from-out "../pricing-table.rkt"))
-       ]
-
-Pollen recognizes the environment variable POLLEN, which can take any value.
-For instance, instead of starting the project server with
-
-raco pollen start
-
-You could do
-
-POLLEN=SOME-STRING raco pollen start
-
-And "SOME-STRING" would be loaded into the POLLEN environment variable.
-
-We can retrieve this value with @racket[(getenv "POLLEN")]. It can be used to create branching behavior.
-Here, we'll create a @racket[dev-mode?] test and use it later to change the behavior of certain functions.
-
-@chunk[<dev-mode>
-       (define (dev-mode?)
-         (equal? (getenv "POLLEN") "DEV"))
+       (provide (all-defined-out) (all-from-out "pricing-table.rkt"))
        ]
 
 
 
-@section{Making tagged X-expressions (txexprs)}
+
+@section{Definitions}
+
+@subsection{Values}
+
+
+Definitions in a pollen.rkt can be functions or values.
+Here are a couple values.
+
+@racket[no-hyphens-attr]: an attribute we'll use to signal that some X-expression should not be hyphenated.
+
+@CHUNK[<values>
+       (define content-rule-color "#444") ; for CSS classes
+       (define buy-url "http://typo.la/oc") ; link to buy the Typography for Lawyers paperback
+       (define no-hyphens-attr '(hyphens "none"))
+       ]
+
+
+@subsection{Tag functions}
+
+
+
+@subsubsection{Making tagged X-expressions (txexprs)}
 
 In a "pollen.rkt" file you'll be making a lot of tagged X-expressions (txexprs for short).
 A txexpr is just a Racket list, so you can make one with any of Racket's list-making functions
@@ -135,25 +148,6 @@ Below,       ; we unquote @racket[attrs] because we want them as a sublist
           [elements '("text")])
       `(,tag ,attrs ,@elements))]
 
-
-@section{Definitions}
-
-@subsection{Values}
-
-
-Definitions in a pollen.rkt can be functions or values.
-Here are a couple values.
-
-@racket[no-hyphens-attr]: an attribute we'll use to signal that some X-expression should not be hyphenated.
-
-@CHUNK[<values>
-       (define content-rule-color "#444") ; for CSS classes
-       (define buy-url "http://typo.la/oc") ; link to buy the Typography for Lawyers paperback
-       (define no-hyphens-attr '(hyphens "none"))
-       ]
-
-
-@subsection{Tag functions}
 
 
 @defproc[
@@ -894,15 +888,6 @@ but I don't want spaces in the output, so this function removes them.
                 [str (regexp-replace* #px"—[\u00A0\u2009\\s](?=\\w)" str "—")])
            str))]
 
-@defproc[
- (capitalize-first-letter
-  [str string?])
- string?]
-utility function for use in HTML templates.
-
-@chunk[<capitalize-first-letter>
-       (define (capitalize-first-letter str)
-         (regexp-replace #rx"^." str string-upcase))]
 
 @subsubsection{Miscellaneous tag functions}
 
@@ -940,17 +925,52 @@ Presented without docs or comment, as it should be obvious at this point what th
          `(table ((class "captioned indented"))
                  (tr (td ((style "text-align:left")) ,@xs) (td  ,(caption name)))))]
 
-@;|{
-        #|
-        |#
-        
-        
-        }|
 
+@section{Utility functions}
+
+@defproc[
+ (dev-mode?)
+ boolean?]
+Check whether Pollen is running in development mode, which means that it was started from the command line with the environment variable @tt{POLLEN} set to the value @tt{DEV}:
+
+@terminal{
+> POLLEN=DEV raco pollen ...}
+
+Rather than the ordinary:
+
+@terminal{
+> raco pollen ...}
+
+This functions will be useful later when we want to change the behavior of certain functions when Pollen runs in dev mode. For instance, we might want to run certain functions in a higher speed / lower quality mode. Or output debug information about others.
+
+@chunk[<dev-mode>
+       (define (dev-mode?)
+         (equal? (getenv "POLLEN") "DEV"))
+       ]
+
+Though the environment variable name is fixed as @tt{POLLEN}, there's no special magic to @tt{DEV}. We could pick any value we wanted to denote development mode:
+
+@terminal{
+> POLLEN=FLUGELHORN raco pollen ...}
+
+
+@defproc[
+ (capitalize-first-letter
+  [str string?])
+ string?]
+For use in our HTML templates. We could also define this function inside a template. But since we have more than one template in this project, we'll put it here, so it can be available to all the templates.
+
+@chunk[<capitalize-first-letter>
+       (define (capitalize-first-letter str)
+         (regexp-replace #rx"^." str string-upcase))]
+
+@section{Finally}
+
+This last incantation is needed so @racketmodname[scribble/lp2] knows how to put together all the code chunks we've introduced in this file.
 
 @chunk[<*>
-       <req>
-       <req2>
+       <base-require>
+       <project-require>
        <provides>
        <dev-mode>
        <values>
