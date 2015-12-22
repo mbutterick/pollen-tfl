@@ -54,7 +54,7 @@ Other libraries we'll be using.
          pollen/decode
          pollen/tag
          hyphenate
-         "pricing-table.rkt")]
+         pollen-tfl/pricing-table)]
 
 
 @section{Exports}
@@ -63,7 +63,7 @@ Note that @racket[all-defined-out] would only export the definitions that are cr
 imported definitions available too, we need to re-export them with @racket[all-from-out].
 
 @chunk[<provides>
-       (provide (all-defined-out) (all-from-out "pricing-table.rkt"))
+       (provide (all-defined-out) (all-from-out pollen-tfl/pricing-table))
        ]
 
 
