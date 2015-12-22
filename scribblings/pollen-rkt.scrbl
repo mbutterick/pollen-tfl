@@ -9,21 +9,24 @@
 
 @(define lang @racket[#, @hash-lang[]])
 
-We can write a @filepath{pollen.rkt} file in any @|lang|. Most commonly, that will be is @|lang| @racketmodname[racket/base]. @|lang| @racketmodname[racket] is more convenient because it loads more libraries by default, but as a result it can be slightly slower to load. So @racketmodname[racket/base] is the more virtuous habit.
 
-This particular @filepath{pollen.rkt}, however, is written in @|lang| @racketmodname[scribble/lp2], which is the literate-programming variant of Racket's Scribble documentation language (which is also the basis of Pollen). @racketmodname[scribble/lp2] is like a text-based version of @racketmodname[racket/base]. The "literate programming" angle is that we can mix documentation and source code in one file. Probably not the option you'd choose for your own project, but in this teaching project, it's the right tool for the job.
+We can write a @filepath{pollen.rkt} file in any @|lang|. Most commonly, you'll choose @|lang| @racketmodname[racket/base]. @|lang| @racketmodname[racket] is a tiny bit more convenient because it loads more libraries by default. But as a result, it can be slightly slower to load. So @racketmodname[racket/base] is the more virtuous habit.
 
-Chunks of source code look like this:
+This particular @filepath{pollen.rkt}, however, is written in @|lang| @racketmodname[scribble/lp2], which is the literate-programming variant of Racket's Scribble documentation language (which is also the basis of Pollen). @|lang| @racketmodname[scribble/lp2] is like a text-based version of @|lang| @racketmodname[racket/base]. The ``literate programming'' angle is that we can mix documentation and source code in one file. Probably not the option you'd choose for your own project. But in this teaching project, it's the right tool for the job.
+
+In this documentation, chunks of source code look like this:
 
 @chunk[<chunk-name>
   (define (racket-source-code ...) ...)]
 
-There's nothing special about the chunk name — it's just a label that @racketmodname[scribble/lp2] will use to snap the code together @seclink["Finally"]{at the end}. The result is that if you @racket[require] this file normally, you'll get the usual functions and values; but if you run it with Scribble, it turns into the documentation you see here.
+There's nothing special about the chunk name — it's just a label that @|lang| @racketmodname[scribble/lp2] will use to snap the code together @seclink["Finally"]{at the end}. The result is that if you @racket[require] this file normally, you'll get the usual functions and values; but if you run it with Scribble, it turns into the documentation you see here.
+
+Aside from that wrinkle, all the code shown here is standard @racketmodname[racket/base], and can be copied & adapted for your own @filepath{pollen.rkt} files written in @|lang| @racketmodname[racket/base] (or @|lang| @racketmodname[racket]).
 
 @section{What is @filepath{pollen.rkt} for?}
 
-The @filepath{pollen.rkt} source file is the main source of functions and values for the source files in a Pollen project. Everything provided from a @filepath{pollen.rkt} is automatically available to Pollen source files in the
-same directory or subdirectories (unless superseded by another @filepath{pollen.rkt} below, for instance in the @filepath{fonts} subdirectory in this project).
+The @filepath{pollen.rkt} source file is the main source of functions and values for the source files in a Pollen project. Everything provided from a @filepath{pollen.rkt} is automatically available to @|lang| @racketmodname[pollen] source files in the
+same directory or subdirectories (unless superseded by another @filepath{pollen.rkt} within a subdirectory).
 
 For more, see @secref["Using_the__pollen_rkt__file"
          #:tag-prefixes '("tutorial-3")
@@ -32,7 +35,9 @@ For more, see @secref["Using_the__pollen_rkt__file"
 
 @section{Imports}
 
-If we were using @|lang| @racketmodname[racket], these next libraries would already be imported. But because we're using @racketmodname[racket/base] (via @racketmodname[scribble/lp2]), we need to @racket[require] them explicitly.
+Though @racket[require] declarations can live anywhere at the top layer of a source file, it's typical to consolidate them at the top.
+
+If we were using @|lang| @racketmodname[racket], these next libraries would already be imported. But we aren't, so they're not.
 
 @chunk[<base-require>
        (require
@@ -45,16 +50,22 @@ If we were using @|lang| @racketmodname[racket], these next libraries would alre
          racket/match
          racket/system)]
 
-Other libraries we'll be using.
+Other libraries we'll be using. @racketmodname[sugar] and @racketmodname[txexpr] are utility libraries installed with Pollen. @racketmodname[hyphenate] is separate, but can be installed easily:
+
+@terminal{> raco pkg install hyphenate}
+
+@filepath{pricing-table.rkt} is another custom Racket file for this project. It's up to you whether you store all your functions and definitions in @filepath{pollen.rkt}, or spread them over different source files. Regardless of where you store them, @filepath{pollen.rkt} remains the central gathering point for everything you want to propagate to the @|lang| @racketmodname[pollen] source files in your project.
+
+@margin-note{If you end up making reusable functions, you can share them between Pollen projects (and with other Racket users, if you want) by moving them into a @italic{package}.  For more, see @secref["how-to-create" #:doc '(lib "pkg/scribblings/pkg.scrbl")].}
 
 @chunk[<project-require>
        (require
-         sugar
-         txexpr
          pollen/decode
          pollen/tag
+         sugar
+         txexpr
          hyphenate
-         pollen-tfl/pricing-table)]
+         "../pricing-table.rkt")]
 
 
 @section{Exports}
@@ -63,7 +74,7 @@ Note that @racket[all-defined-out] would only export the definitions that are cr
 imported definitions available too, we need to re-export them with @racket[all-from-out].
 
 @chunk[<provides>
-       (provide (all-defined-out) (all-from-out pollen-tfl/pricing-table))
+       (provide (all-defined-out) (all-from-out "../pricing-table.rkt"))
        ]
 
 
