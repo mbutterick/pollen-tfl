@@ -17,7 +17,7 @@ This particular @filepath{pollen.rkt}, however, is written in @|lang| @racketmod
 In this documentation, chunks of source code look like this:
 
 @chunk[<chunk-name>
-  (define (racket-source-code ...) ...)]
+       (define (racket-source-code ...) ...)]
 
 There's nothing special about the chunk name — it's just a label that @|lang| @racketmodname[scribble/lp2] will use to snap the code together @seclink["Finally"]{at the end}. The result is that if you @racket[require] this file normally, you'll get the usual functions and values; but if you run it with Scribble, it turns into the documentation you see here.
 
@@ -29,8 +29,8 @@ The @filepath{pollen.rkt} source file is the main source of functions and values
 same directory or subdirectories (unless superseded by another @filepath{pollen.rkt} within a subdirectory).
 
 For more, see @secref["Using_the__pollen_rkt__file"
-         #:tag-prefixes '("tutorial-3")
-         #:doc '(lib "pollen/scribblings/pollen.scrbl")] in the main Pollen docs.
+                      #:tag-prefixes '("tutorial-3")
+                      #:doc '(lib "pollen/scribblings/pollen.scrbl")] in the main Pollen docs.
 
 
 @section{Imports}
@@ -71,7 +71,7 @@ Other libraries we'll be using. @racketmodname[sugar] and @racketmodname[txexpr]
 @section{Exports}
 
 Note that @racket[all-defined-out] would only export the definitions that are created in this file. To make
-imported definitions available too, we need to re-export them with @racket[all-from-out].
+imported definitions available too, we need to re-export them explicitly with @racket[all-from-out].
 
 @chunk[<provides>
        (provide (all-defined-out) (all-from-out "../pricing-table.rkt"))
@@ -84,11 +84,13 @@ imported definitions available too, we need to re-export them with @racket[all-f
 
 @subsection{Values}
 
+Definitions in a @filepath{pollen.rkt} can be functions or values. Because they get propagated to other Pollen source files, they're almost like global definitions. As usual with global definitions, you should use them when you need them, but it's still wise to localize things within specific directories or source files when you can. Otherwise the main @filepath{pollen.rkt} can get to be unwieldy.
 
-Definitions in a pollen.rkt can be functions or values.
-Here are a couple values.
+@racket[content-rule-color] is a CSS value.
 
-@racket[no-hyphens-attr]: an attribute we'll use to signal that some X-expression should not be hyphenated.
+@racket[buy-url] is the master URL for buying the TFL paperback. In general, it's wise to store hard-coded values like these in a variable so that you can change the value from one location later if you need to.
+
+@racket[no-hyphens-attr] is an X-expression attribute we'll use to signal that a certain X-expression should not be hyphenated. The need for this will be explained later.
 
 @CHUNK[<values>
        (define content-rule-color "#444") ; for CSS classes
@@ -103,56 +105,60 @@ Here are a couple values.
 
 @subsubsection{Making tagged X-expressions (txexprs)}
 
-In a "pollen.rkt" file you'll be making a lot of tagged X-expressions (txexprs for short).
-A txexpr is just a Racket list, so you can make one with any of Racket's list-making functions
-(which are plentiful). Let's run through a few of them, so they start to become familiar.
+In a @filepath{pollen.rkt} you'll be making a lot of tagged X-expressions (txexprs for short). A txexpr is just a Racket list, so you can make txexprs with any of Racket's list-making functions — which are plentiful. Which one you use depends on what fits most naturally with the current task.
 
-Suppose we want to generate the txexpr '(div ((class "big")) "text"). Here are some ways to do it.
+@margin-note{@secref["X-expressions" #:doc '(lib "pollen/scribblings/pollen.scrbl")] are introduced in the Pollen docs.}
 
-@subsection{@racket[txexpr]}
-A utility function from the @racket[txexpr] module. We used it in the @racket[link] function above.
-The major advantage of @racket[txexpr] is that it will raise an error if your arguments are invalid
-types for a tagged X-expression.
+
+Let's run through a few of them, so they start to become familiar. Suppose we want to generate the txexpr '(div ((class "big")) "text"). Here are some ways to do it.
+
+@subsection{@tt{txexpr}}
+
+A utility function from the @racket[txexpr] module. We used it in the @racket[link] function above. The major advantage of @racket[txexpr] is that it will raise an error if your arguments are invalid types for a tagged X-expression.
 
 @(define-syntax-rule (eg xs ...)
    (examples #:eval my-eval xs ...))
 
-@eg[(txexpr 'div '((class "big")) '("text"))]
+@eg[(txexpr 'div '((class "big")) '("text"))
+    (txexpr 42 '((class "big")) '("text"))
+    (txexpr 'div 'invalid-input "text")
+    (txexpr 'div '((class "big")) 'invalid-input)]
 
 
-The second and third arguments to @racket[txexpr] are lists, so you can use any list notation.
-If your txexpr doesn't have attributes, you can pass @racket[empty] or @racket[null] for the second argument.
+The second and third arguments to @racket[txexpr] are lists, so you can use any list notation. If your txexpr doesn't have attributes, you pass @racket[empty] or @racket[null] for the second argument.
 
 @eg[(txexpr 'div (list '(class "big")) (list "text"))]
 
-@subsection{@racket[list] and @racket[list*]}
+@margin-note{Because @racket[txexpr] is designed to check its arguments for correctness, it insists on getting an explicit argument for the attributes, even if @racket[empty]. When you're using generic list-making functions (see below) to create txexprs, you can omit the attribute list if it's empty.}
+
+@subsection{@tt{list} and @tt{list*}}
 
 @racket[list*] is particularly useful for making txexprs, because it automatically splices the last argument.
 
 @eg[(list 'div '((class "big")) "text")
     (list* 'div '((class "big")) '("text"))]
 
-@subsection{@racket[cons]}
+Unlike @racket[txexpr], however, @racket[list] and @racket[list*] will happily let you create invalid txexprs.
 
-All lists are ultimately made of @racket[cons] cells.
-So you can make txexprs with it too, though it's more cumbersome than the other methods.
-In most cases, @racket[list*] is clearer & more flexible (@racket[cons] can only take two arguments;
-@racket[list*] can take any number)
+@eg[(define not-a-tx (list* 42 '((class "big")) "text"))
+    (txexpr? not-a-tx)]
+
+This isn't necessarily a bad thing. When a txexpr needs to pass through multiple layers of processing, it can be useful to create intermediate results that are txexpr-ish, and simplify them at the end.
+
+@subsection{@tt{cons}}
+
+All lists are ultimately made of @racket[cons] cells. So you can make txexprs with @racket[cons] too, though it's more cumbersome than the other methods. In most cases, @racket[list*] is clearer & more flexible, because @racket[cons] can only take two arguments, whereas @racket[list*] can take any number.
 
 @eg[(cons 'div (cons '((class "big")) (cons "text" empty)))
     (cons 'div (list '((class "big")) "text"))]
 
-@subsection{@racket[quasiquote]}
+@subsection{@tt{quasiquote}}
 
-As the name suggests, quasiquote works like quote, but lets you "unquote" variables within.
-Quasiquote notation is pleasingly compact for simple cases, but can be unruly for complex ones.
-The unquote operator (,) puts a variable's value into the list.
-The unquote splicing operator (,@"@") does the same thing, but if the variable holds a list of items,
-it merges those items into the list (i.e., does not leave them as a sublist).
+As the name suggests, @racket[quasiquote] works like @racket[quote], but lets you @racket[unquote] variables within. Quasiquote notation is pleasingly compact for simple cases. But it can be unruly for complex ones.
+The unquote operator (@litchar{,}) puts a variable's value into the list.
+The unquote splicing operator (@litchar{,@"@"}) does the same thing, but if the variable holds a list of items, it merges those items into the list (i.e., does not leave them as a sublist).
 
-Below,       ; we unquote @racket[attrs] because we want them as a sublist
-; but we splice @racket[elements] because we don't want them in a sublist
-
+Below, we unquote @racket[attrs] because we want them to remain a sublist. But we splice @racket[elements] because we want them to be merged with the main list.
 
 @eg[(let ([tag 'div]
           [attrs '((class "big"))]
@@ -160,126 +166,118 @@ Below,       ; we unquote @racket[attrs] because we want them as a sublist
       `(,tag ,attrs ,@elements))]
 
 
+@subsection{Functions}
 
 @defproc[
  (link
-  [url path-string?]
+  [url string?]
   [#:class css-class (or/c #f string?) #f]
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?]
 Make a hyperlink.
 
 In Pollen notation, we'll invoke the tag function like so:
 
-◊link[url]{text of link}
-◊link[url #:class "name"]{text of link}
+@terminal{
+ ◊link[url]{text of link}
+ ◊link[url #:class "name"]{text of link}}
 
 This will become, in Racket notation:
 
-(link url "text of link")
-(link url #:class "name" "text of link")
+@terminal{
+ (link url "text of link")
+ (link url #:class "name" "text of link")}
 
-The definition of the tag function will follow this syntax.
+@margin-note{Getting a feel for the duality of Pollen & Racket notation is a necessary part of the learning curve. If it seems like an annoying complication, consider that the two styles are optimized for different contexts: Pollen notation is for embedding commands in text, and Racket notation is for writing code. The fact that the two are interchangeable is what guarantees that everything that can be done in Racket can also be done in Pollen.}
 
-Learning to see the duality of Pollen & Racket notation is a necessary part of the learning curve.
-Pollen notation is optimized for embedding commands in text.
-Racket notation is optimized for writing code.
 
-The relationship between the two, however, is dependable and consistent.
+The result of our tag function will be a tagged X-expression that looks like this:
 
-By contrast, most "template languages" either make you use syntax that's different from the
-underlying language, or restrict you to a subset of commands.
+@terminal{
+ '(a ((href "url")) "text to link")
+ '(a ((href "url")(class "name")) "text to link")}
 
-Whereas any Racket command can be expressed in Pollen notation. So having two equivalent notation
-systems ultimately lets you do more, not less.
 
 The definition of @racket[link] follows the arguments above.
 
 @racket[_url] is a mandatory argument.
 
-@racket[_css-class] is a keyword argument (= must be introduced with #:class) and also optional (if it's not
-provided, it will default to @racket[#f]).
+@racket[_css-class] is a keyword argument (= must be introduced with @racket[#:class]) and also optional (if it's not provided, it will default to @racket[#f]).
 
-@racket[_pollen-args] is a rest argument, as in ``put the rest of the arguments here.'' Most definitions of
-tag functions should end with a rest argument. Why? Because in Pollen notation, the @racket[{text ...}]
-in @racket[◊func[arg]{text ...}] can return any number of arguments. Maybe one (e.g., if @racket[text] is a word)
-or maybe more (e.g, if @racket[text ...] is a multiline block).
+@racket[_tx-elements] is an optional argument that represents the text (or other content) that gets linked. If we don't have anything to link, use @racket[_url] as the link text too.
 
-If you @italic{don't} use a rest argument, and pass multiple text arguments to your tag function, you will get
-an error (namely an ``arity error,'' which means the function got more arguments than it expected).
+@racket[_tx-elements] is a @seclink["contracts-rest-args" #:doc '(lib "scribblings/guide/guide.scrbl")]{@italic{rest argument}}, as in ``put the rest of the arguments here.'' Most definitions of
+tag functions should end with a rest argument. Why? Because in Pollen notation, the @tt{{text ...}}
+in @tt{◊func[arg]{text ...}} can return any number of arguments. Maybe one (e.g., if @tt{{text ...}} is a word)
+or maybe more (e.g, if @tt{{text ...}} is a multiline block).
 
-The result of our tag function will be a tagged X-expression that looks like this:
-
-'(a ((href "url")) "text to link")
-'(a ((href "url")(class "name")) "text to link")
-
-X-expressions and tagged X-expressions are introduced in the Pollen docs.
-
-If we don't have any text to link, use @racket[_url] as the link text too.
-
-Otherwise, create the basic tagged X-expression, and then add the @racket[_url] and (maybe) @racket[_class] attribute.
+If you don't use a rest argument, and pass multiple text arguments to your tag function, you'll get an error (namely an ``arity error,'' which means the function got more arguments than it expected).
 
 @margin-note{@racket[let*] is the idiomatic Racket way to do what looks like mutation. Though you're not really mutating the variable — you're creating copies, all of which have the same name. For true mutation, you could also use @racket[set!] — not wrong, but not idiomatic.}
 
 @chunk[<link>
-       (define (link url #:class [class-name #f] . text-args)
-         (define no-text-arguments? (empty? text-args))
-         (if no-text-arguments?
-             (let ([text-to-link url])
-               (link #:class class-name url text-to-link))
-             (let*
-                 ([link-tx (txexpr 'a empty text-args)]        
-                  [link-tx (attr-set link-tx 'href url)]
-                  [link-tx (if class-name
-                               (attr-set link-tx 'class class-name)
-                               link-tx)])
+       (define (link url #:class [class-name #f] . tx-elements)
+         (let* ([tx-elements (if (empty? tx-elements)
+                                 url
+                                 tx-elements)]
+                [link-tx (txexpr 'a empty tx-elements)]        
+                [link-tx (attr-set link-tx 'href url)])
+           (if class-name
+               (attr-set link-tx 'class class-name)
                link-tx)))]
 
 
 
-The next three tag functions are just convenience variations of @racket[link].
-But they involve some crafty (and necessary) uses of @racket[apply].
+The next three tag functions are just convenience variations of @racket[link]. But they involve some crafty (and necessary) uses of @racket[apply].
 
-@defproc[
- (buy-book-link)
+@deftogether[(
+              @defproc[
+ (buy-book-link
+  [tx-element xexpr?] ...)
  txexpr?]
-Make a link with a particular URL.
-@racket[buylink]: creates a link styled with the "buylink" class.
-@racket[home-link]: creates a link styled with the "home-link" class.
+               @defproc[
+ (buylink
+  [url string?]
+  [tx-element xexpr?] ...)
+ txexpr?]
+               @defproc[
+ (home-link
+  [url string?]
+  [tx-element xexpr?] ...)
+ txexpr?])]
+Make a link with a particular URL. The link resulting from @racket[buylink] is styled with the @tt{buylink} class, and the one from @racket[home-link] is styled with the @tt{home-link} class.
 
-
-Notice that we have to use @racket[apply] to correctly pass our @racket[text-args] rest argument to @racket[link].
+Notice that we have to use @racket[apply] to correctly pass our @racket[tx-elements] rest argument to @racket[link].
 Why? Because @racket[link] expects its text arguments to look like this:
 
-(link url text-arg-1 text-arg-2 ...)
+@terminal{(link url arg-1 arg-2 ...)}
 
 Not like this:
 
-(link url (list text-arg-1 text-arg-2 ...))
+@terminal{(link url (list arg-1 arg-2 ...))}
 
-But that's what will happen if we just do @racket[(link text-args)], and @racket[link] will complain. (Try it!)
+But that's what will happen if we just do @racket[(link tx-elements)], and @racket[link] will complain. (Try it!)
 
 The role of @racket[apply] is to take a list of arguments and append them to the end of the function call, so
 
-(apply link url (list text-arg-1 text-arg-2 ...))
+@terminal{(apply link url (list arg-1 arg-2 ...))}
 
 Is equivalent to:
 
-(link url text-arg-1 text-arg-2 ...)
+@terminal{(link url arg-1 arg-2 ...)}
 
-The difference here is that we're not providing a specific URL. Rather, we want to pass through
-whatever URL we get from the Pollen source. So we add a @racket[url] argument.
+The difference here is that we're not providing a specific URL. Rather, we want to pass through whatever URL we get from the Pollen source. So we add a @racket[_url] argument.
 
 
 @chunk[<buy-book-link>
-       (define (buy-book-link . text-args)
-         (apply link buy-url text-args))
+       (define (buy-book-link . tx-elements)
+         (apply link buy-url tx-elements))
        
-       (define (buylink url . text-args)
-         (apply link url #:class "buylink" text-args))
+       (define (buylink url . tx-elements)
+         (apply link url #:class "buylink" tx-elements))
        
-       (define (home-link url . text-args)
-         (apply link url #:class "home-link" text-args))]
+       (define (home-link url . tx-elements)
+         (apply link url #:class "home-link" tx-elements))]
 
 
 @defproc[
@@ -288,18 +286,11 @@ whatever URL we get from the Pollen source. So we add a @racket[url] argument.
   [#:width width string? "100%"]
   [#:border border? boolean? #t])
  txexpr?]
-Make an img tag
+Make an image tag. We proceed as we did with @racket[link]. But in this case, we don't need a rest argument because this tag function doesn't accept text arguments.
 
-We proceed as we did with @racket[link]. But in this case, we don't need a rest argument
-because this tag function doesn't accept text arguments.
+``Right, but shouldn't we use a rest argument just in case?'' It depends on how you like errors to be handled. You could capture the text arguments with a rest argument and then just silently dispose of them. But this might be mysterious to the person editing the Pollen source (whether you or someone else). "Where did my text go?"
 
-"Right, but shouldn't you use a rest argument just in case?" It depends on how you like errors
-to be handled. You could capture the text arguments with a rest argument and then just silently
-dispose of them. But this might be mysterious to the person editing the Pollen source (whether you
-or someone else). "Where did my text go?"
-
-Whereas if we omit the rest argument, and try to pass text arguments anyhow, @racket[image] will immediately
-raise an error, letting us know that we're misusing it.
+Whereas if we omit the rest argument, and try to pass text arguments anyhow, @racket[image] will immediately raise an error, letting us know that we're misusing it.
 
 @chunk[<image>
        (define (image src #:width [width "100%"] #:border [border? #t])
@@ -313,27 +304,26 @@ raise an error, letting us know that we're misusing it.
 @defproc[
  (div-scale
   [factor (or/c string? number?)]
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?]
-Wrap tag in a 'div' with a scaling factor.
+Wrap tag in a @racket['div] with a scaling factor. Keep in mind that with X-expressions, numbers like @racket[2048] are not interchangeable with strings like @racket["2048"]. Moreover, all values inside attributes have to be strings. So if an argument will be used as an attribute value, it's wise to explicitly convert it to a strings explicitly. This has the side benefit of allowing the function to accept either a string or number for @racket[_factor].
 
 @chunk[<div-scale>
-       (define (div-scale factor . text-args)
-         ; use @racket[format] on factor because it might be either a string or a number
-         (define base (txexpr 'div null text-args))
+       (define (div-scale factor . tx-elements)
+         (define base (txexpr 'div null tx-elements))
          (attr-set base 'style (format "width: ~a" factor)))]
 
 
 @defproc[
  (font-scale
   [ratio (or/c string? number?)]
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?]
-Wrap tag in a 'span' with a relative font-scaling factor
+Like @racket[div-scale] — wrap tag in a @racket['span] with a relative font-scaling factor.
 
 @chunk[<font-scale>
-       (define (font-scale ratio . text-args)
-         (define base (txexpr 'span null text-args))
+       (define (font-scale ratio . tx-elements)
+         (define base (txexpr 'span null tx-elements))
          (attr-set base 'style (format "font-size: ~aem" ratio)))]
 
 
@@ -341,7 +331,7 @@ Wrap tag in a 'span' with a relative font-scaling factor
  (home-image
   [image-path path-string?])
  txexpr?]
-Make an image with class "home-image"
+Make an image with class @tt{home-image}.
 
 @chunk[<home-image>
        (define (home-image image-path)
@@ -350,7 +340,7 @@ Make an image with class "home-image"
 @defproc[
  (home-overlay
   [image-name path-string?]
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?]
 Create nested divs where the text sits atop a background image.
 This is an example of how fiddly HTML chores can be encapsulated / hidden inside a tag function.
@@ -358,18 +348,18 @@ This makes your source files tidier.
 It also makes it possible to change the fiddly HTML markup from one central location.
 
 @chunk[<home-overlay>
-       (define (home-overlay img-path . text-args)
-         `(div ((class "home-overlay")(style ,(format "background-image: url('~a')" img-path)))
-               (div ((class "home-overlay-inner")) ,@text-args)))]
+       (define (home-overlay img-path . tx-elements)
+         `(div ((class "home-overlay")
+                (style ,(format "background-image: url('~a')" img-path)))
+               (div ((class "home-overlay-inner")) ,@tx-elements)))]
 
 @defproc[
  (glyph
   [text string?])
  txexpr?]
-Create a span with the class "glyph".
+Create a span with the class @tt{glyph}. 
 
-Here, we'll use @racket[make-default-tag-function], which is an easy way to make a simple tag function.
-Any keywords passed in will be propagated to every use of the tag function.
+Here, we'll use @racket[make-default-tag-function], which is an easy way to make a simple tag function. Any keywords passed in will be propagated to every use of the tag function.
 
 @chunk[<glyph>
        (define glyph (make-default-tag-function 'span #:class "glyph"))]
@@ -379,45 +369,33 @@ Any keywords passed in will be propagated to every use of the tag function.
  (image-wrapped
   [image-path path-string?])
  txexpr?]
-Like @racket[image] but with some extra attributes
+Like @racket[image], but with some extra attributes.
 
 @chunk[<image-wrapped>
        (define (image-wrapped img-path)
-         (attr-set* (image img-path) 'class "icon" 'style "width: 120px;" 'align "left"))]
+         (attr-set* (image img-path) 
+                    'class "icon" 
+                    'style "width: 120px;" 
+                    'align "left"))]
 
 @defproc[
  (detect-list-items
-  [elems txexpr-elements?])
+  [elems (listof txexpr?)])
  (listof txexpr?)]
 Helper function for other tag functions that make HTML lists.
 
-The idea is to automatically convert a sequence of three (or more) linebreaks
-into a new list item (i.e., <li> tag).
+The idea is to interpret a sequence of three (or more) linebreaks
+in the text as a list-item delimiter (i.e., drop in a @tt{<li>} tag).
+Why three linebreaks? Because later on, we'll use one linebreak to denote a new line, and two linebreaks to denote a new paragraph.
 
-Why three? Because later on, we'll make one linebreak = new line and two linebreaks = new paragraph.
+This function will be used within a @racket[decode] function (more on that below) in a position where it will be passed a list of X-expresssion elements, so it also needs to return a list of X-expression elements.
 
-This function will be used within a @racket[decode] function (more on that below)
-in a position where it will be passed a list of X-expresssion elements,
-and needs to return a list of X-expression elements.
+@margin-note{The idiomatic Racket way to enforce requirements on input & output values is with a @seclink["function-contracts"
+         #:doc '(lib "scribblings/reference/reference.scrbl")]{@italic{function contract}}. For simplicity, I'm not using them here, but they are another virtuous habit  .}
 
-The idiomatic Racket way to enforce requirements on input & output values is with a function contract.
-For simplicity, I'm not using them here.
+Our list of elements could contain sequences like @racket['("\n" "\n" "\n")], which should mean the same thing as @racket["\n\n\n"]. So first, we'll combine adjacent newlines with @racket[merge-newlines].
 
-;; We need to do some defensive preprocessing here.
-;; Our list of elements could contain sequences like "\n" "\n" "\n"
-;; that should mean the same thing as "\n\n\n".
-;; So we combine adjacent newlines with @racket[merge-newlines].
-;; Then, a list item break is denoted by any element that matches three or more newlines.
-;; Python people will object to the @racket[(string? elem)] test below
-;; as a missed chance for "duck typing".
-;; You can do duck typing in Racket (see @racket[with-handlers]) but it's not idiomatic.
-;; IMO this is wise. Duck typing is an anti-pattern: it substitutes an explicit, readable test
-;; for an implicit test ("I know if such-and-such isn't true, then a certain error will arise."
-;; @racket[filter-split] will divide a list into sublists based on a certain test.
-;; the result will be a list of lists, each representing the contents of an 'li tag.
-;; We convert any paragraphs that are inside the list items.
-;; Finally we wrap each of these lists of paragraphs in an 'li tag.
-
+@racket[filter-split] will divide a list into sublists based on a certain test. The result will be a list of lists, each representing the contents of an @racket['li] tag. We'll convert any paragraphs that are inside the list items. Finally we'll wrap each of these lists of paragraphs in an @racket['li] tag.
 
 @chunk[<detect-list-items>
        (define (detect-list-items elems)
@@ -431,6 +409,9 @@ For simplicity, I'm not using them here.
          (define li-tag (make-default-tag-function 'li))
          (map (λ(lip) (apply li-tag lip)) list-of-li-paragraphs))]
 
+         @margin-note{Pythonistas might object to the @racket[(string? elem)] test in the last function as a missed chance for ``duck typing.'' You can do duck typing in Racket (see @racket[with-handlers]) but it's not idiomatic. IMO this is wise. Duck typing is a bad habit: it substitutes an explicit, readable test (@racket[string?]) for an implicit, indirect test (``I know if this isn't a @racket[string?], then a certain error will arise.'')}
+
+
 @defproc[
  (make-list-function
   [tag txexpr-tag?]
@@ -438,8 +419,8 @@ For simplicity, I'm not using them here.
  procedure?]
 Helper function that makes other tag functions that make lists.
 
-In Racket you will often see functions that make other functions.
-This is a good way to avoid making a bunch of functions that have small variations.
+In Racket you'll often see functions that make other functions. (In Racket these are also known as @seclink["Additional_Higher-Order_Functions"
+         #:doc '(lib "scribblings/reference/reference.scrbl")]{@italic{higher-order functions}}.) This is a good way to avoid making a bunch of functions that have small variations.
 
 One way to write this function is like so:
 
@@ -449,12 +430,10 @@ One way to write this function is like so:
      (list* tag attrs (detect-list-items args))
      listifier))]
 
-That is, explicitly define a new function called @racket[listifier] and then return that function.
-That's the best way to do it in many programming languages.
+That is, explicitly define a new function called @racket[listifier] and then return that function. That's the best way to do it in many programming languages.
 
-In Racket, it's not wrong, but you should feel comfortable
-with the idea that any function can be equivalently expressed in lambda notation,
-which is the more Rackety idiom.
+In Racket, it's wouldn't be wrong. But you should feel comfortable
+with the idea that any function can be equivalently expressed in @racket[lambda] notation, which is the more idiomatic form.
 
 @chunk[<make-list-function>
        (define (make-list-function tag [attrs empty])
@@ -463,14 +442,13 @@ which is the more Rackety idiom.
 @deftogether[(
               @defproc[
  (bullet-list
-  [pollen-args txexpr?] ...)
+  [tx-element txexpr?] ...)
  txexpr]
                @defproc[
  (numbered-list
-  [pollen-args txexpr?] ...)
+  [tx-element txexpr?] ...)
  txexpr])]
-
-Now we can define @racket[bullet-list] and @racket[numbered-list] using @racket[make-list-function].
+These can now be easily defined using the @racket[make-list-function] helper.
 
 @chunk[<bullet-list>
        (define bullet-list (make-list-function 'ul))]
@@ -481,7 +459,7 @@ Now we can define @racket[bullet-list] and @racket[numbered-list] using @racket[
 
 @defproc[
  (btw
-  [pollen-args txexpr?] ...)
+  [tx-element txexpr?] ...)
  txexpr]
 Make the "By the Way" list at the bottom of many pages,
 e.g. http://typographyforlawyers.com/what-is-typography.html
@@ -490,10 +468,10 @@ Another example of using a tag function to handle fiddly HTML markup.
 The @racket[btw] tag expands to an HTML list, which we will then crack open and add a headline div.
 
 @chunk[<btw>
-       (define (btw . text-args)
+       (define (btw . tx-elements)
          (define btw-tag-function (make-list-function 'ul '((class "btw"))))
          ;; Why is @racket[apply] needed here? See the explanation for @racket[buy-book-link] above.
-         (define btw-list (apply btw-tag-function text-args))
+         (define btw-list (apply btw-tag-function tx-elements))
          (list* (get-tag btw-list)
                 (get-attrs btw-list)
                 '(div ((id "btw-title")) "by the way")
@@ -601,23 +579,23 @@ with arguments that will be filled in when you invoke the macro.
 @deftogether[(
               @defproc[
  (topic
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?]
                @defproc[
  (subhead
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?]
                @defproc[
  (font-headline
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?]
                @defproc[
  (section
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?]
                @defproc[
  (chapter
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?])]
 
 @chunk[<headings>
@@ -669,18 +647,18 @@ an identifier called @racket[topic-from-metas]. You can't do that with @racket[d
 @defproc[
  (hanging-topic
   [topic-xexpr xexpr?]
-  [pollen-args (listof xexpr?)] ...)
+  [tx-element xexpr?] ...)
  txexpr?]
 Convert a topic + subhead into one HTML markup unit
 
 @chunk[<hanging-topic>
-       (define (hanging-topic topic-xexpr . pollen-args)
+       (define (hanging-topic topic-xexpr . tx-elements)
          (txexpr 'div (list '(class "hanging-topic") no-hyphens-attr)
-                 (list topic-xexpr (list* 'p (list no-hyphens-attr) pollen-args))))]
+                 (list topic-xexpr (list* 'p (list no-hyphens-attr) tx-elements))))]
 
 @defproc[
  (quick-table
-  [table-rows (listof xexpr?)] ...)
+  [table-rows xexpr?] ...)
  txexpr?]
 Make an HTML table using simplified notation
 
@@ -701,12 +679,12 @@ You could improve it to fill in blank cells in rows that need them.
 
 
 @chunk[<quick-table>
-       (define (quick-table . text-args)
+       (define (quick-table . tx-elements)
          
-         ;; In Pollen, a multiline text-args block arrives as a list of lines and linebreak characters.
+         ;; In Pollen, a multiline tx-elements block arrives as a list of lines and linebreak characters.
          ;; (A situation we already encountered in @racket[detect-list-items].)
          (define rows-of-text-cells
-           (let ([text-rows (filter-not whitespace? text-args)]) ; throw out the linebreak characters
+           (let ([text-rows (filter-not whitespace? tx-elements)]) ; throw out the linebreak characters
              ;; @racket[for/list] is very handy: a @racket[for] loop that gathers the results into a list.
              ;; Think of it as a more flexible version of @racket[map].
              (for/list ([text-row (in-list text-rows)])
@@ -804,7 +782,7 @@ A few convenience variants of @racket[pdf-thumbnail-link]
 
 @defproc[
  (root
-  [pollen-args (listof txexpr?)] ...)
+  [tx-elements (listof txexpr?)] ...)
  txexpr?]
 Decode page content
 
@@ -945,12 +923,12 @@ Presented without docs or comment, as it should be obvious at this point what th
 Check whether Pollen is running in development mode, which means that it was started from the command line with the environment variable @tt{POLLEN} set to the value @tt{DEV}:
 
 @terminal{
-> POLLEN=DEV raco pollen ...}
+ > POLLEN=DEV raco pollen ...}
 
 Rather than the ordinary:
 
 @terminal{
-> raco pollen ...}
+ > raco pollen ...}
 
 This functions will be useful later when we want to change the behavior of certain functions when Pollen runs in dev mode. For instance, we might want to run certain functions in a higher speed / lower quality mode. Or output debug information about others.
 
@@ -962,7 +940,7 @@ This functions will be useful later when we want to change the behavior of certa
 Though the environment variable name is fixed as @tt{POLLEN}, there's no special magic to @tt{DEV}. We could pick any value we wanted to denote development mode:
 
 @terminal{
-> POLLEN=FLUGELHORN raco pollen ...}
+ > POLLEN=FLUGELHORN raco pollen ...}
 
 
 @defproc[
