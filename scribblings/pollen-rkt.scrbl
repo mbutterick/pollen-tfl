@@ -395,7 +395,7 @@ This function will be used within a @racket[decode] function (more on that below
 
 Our list of elements could contain sequences like @racket['("\n" "\n" "\n")], which should mean the same thing as @racket["\n\n\n"]. So first, we'll combine adjacent newlines with @racket[merge-newlines].
 
-@racket[filter-split] will divide a list into sublists based on a certain test. The result will be a list of lists, each representing the contents of an @racket['li] tag. We'll convert any paragraphs that are inside the list items. Finally we'll wrap each of these lists of paragraphs in an @racket['li] tag.
+@racket[filter-split] will divide a list into sublists based on a test for the list-item delimiter. The result will be a list of lists, each representing the contents of an @racket['li] tag. We'll convert any paragraphs that are inside the list items. Finally we'll wrap each of these lists of paragraphs in an @racket['li] tag.
 
 @chunk[<detect-list-items>
        (define (detect-list-items elems)
