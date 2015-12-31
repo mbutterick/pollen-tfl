@@ -218,7 +218,7 @@ If you don't use a rest argument, and pass multiple text arguments to your tag f
 @chunk[<link>
        (define (link url #:class [class-name #f] . tx-elements)
          (let* ([tx-elements (if (empty? tx-elements)
-                                 url
+                                 (list url)
                                  tx-elements)]
                 [link-tx (txexpr 'a empty tx-elements)]        
                 [link-tx (attr-set link-tx 'href url)])
@@ -391,7 +391,7 @@ Why three linebreaks? Because later on, we'll use one linebreak to denote a new 
 This function will be used within a @racket[decode] function (more on that below) in a position where it will be passed a list of X-expresssion elements, so it also needs to return a list of X-expression elements.
 
 @margin-note{The idiomatic Racket way to enforce requirements on input & output values is with a @seclink["function-contracts"
-         #:doc '(lib "scribblings/reference/reference.scrbl")]{@italic{function contract}}. For simplicity, I'm not using them here, but they are another virtuous habit  .}
+                                                                                                          #:doc '(lib "scribblings/reference/reference.scrbl")]{@italic{function contract}}. For simplicity, I'm not using them here, but they are another virtuous habit  .}
 
 Our list of elements could contain sequences like @racket['("\n" "\n" "\n")], which should mean the same thing as @racket["\n\n\n"]. So first, we'll combine adjacent newlines with @racket[merge-newlines].
 
@@ -409,7 +409,21 @@ Our list of elements could contain sequences like @racket['("\n" "\n" "\n")], wh
          (define li-tag (make-default-tag-function 'li))
          (map (λ(lip) (apply li-tag lip)) list-of-li-paragraphs))]
 
-         @margin-note{Pythonistas might object to the @racket[(string? elem)] test in the last function as a missed chance for ``duck typing.'' You can do duck typing in Racket (see @racket[with-handlers]) but it's not idiomatic. IMO this is wise. Duck typing is a bad habit: it substitutes an explicit, readable test (@racket[string?]) for an implicit, indirect test (``I know if this isn't a @racket[string?], then a certain error will arise.'')}
+@margin-note{Explicit type checking — e.g., @racket[(string? elem)] — is common in Racket. You can do ``duck typing'' (see @racket[with-handlers]) but it's not idiomatic. IMO this is wise — better to have an explicit, readable test (likse @racket[string?]) rather than an implicit, indirect one (``If the input isn't a @racket[string?], then a certain error will arise.'')}
+
+
+Because of the expression-based structure of Racket, it's often possible to write functions in an absurdly nested style. For instance, the last function could be written like so:
+
+@chunk[<bad-idea>
+       (define (detect-list-items elems)
+         (map (compose1 (curry apply (make-default-tag-function 'li))
+                        (curryr detect-paragraphs #:force? #t))
+              (filter-split (merge-newlines elems)
+                            (λ(x) (and (string? x)
+                                       (regexp-match #rx"\n\n\n+" x))))))]
+
+
+This is a good way to lose your friends, and then your mind. You may not care to spell everything out the way I've been doing in this sample project. But readability is a virtuous habit.
 
 
 @defproc[
@@ -419,8 +433,8 @@ Our list of elements could contain sequences like @racket['("\n" "\n" "\n")], wh
  procedure?]
 Helper function that makes other tag functions that make lists.
 
-In Racket you'll often see functions that make other functions. (In Racket these are also known as @seclink["Additional_Higher-Order_Functions"
-         #:doc '(lib "scribblings/reference/reference.scrbl")]{@italic{higher-order functions}}.) This is a good way to avoid making a bunch of functions that have small variations.
+In Racket you'll often see functions that make other functions. (These are sometimes called @seclink["Additional_Higher-Order_Functions"
+                                                                                                     #:doc '(lib "scribblings/reference/reference.scrbl")]{@italic{higher-order functions}}.) This is a good way to avoid making a bunch of functions that have small variations.
 
 One way to write this function is like so:
 
@@ -461,16 +475,14 @@ These can now be easily defined using the @racket[make-list-function] helper.
  (btw
   [tx-element txexpr?] ...)
  txexpr]
-Make the "By the Way" list at the bottom of many pages,
-e.g. http://typographyforlawyers.com/what-is-typography.html
+Make the ``By the Way'' list that appears at the bottom of many pages, @link["http://typographyforlawyers.com/what-is-typography.html"]{like this one}.
 
 Another example of using a tag function to handle fiddly HTML markup.
-The @racket[btw] tag expands to an HTML list, which we will then crack open and add a headline div.
+The @racket[btw] tag expands to an HTML list. We will then crack this open and slip in a @racket[div] for the headline.
 
 @chunk[<btw>
        (define (btw . tx-elements)
          (define btw-tag-function (make-list-function 'ul '((class "btw"))))
-         ;; Why is @racket[apply] needed here? See the explanation for @racket[buy-book-link] above.
          (define btw-list (apply btw-tag-function tx-elements))
          (list* (get-tag btw-list)
                 (get-attrs btw-list)
@@ -486,23 +498,17 @@ The @racket[btw] tag expands to an HTML list, which we will then crack open and 
              [target string?])
             txexpr?]
            )]
-Create a styled cross-reference link, with optional destination argument.
+Create a styled cross-reference link, with optional destination argument, so it can be used two ways:
 
-◊xref{target}
-◊xref["url"]{target}
+@terminal{
+ ◊xref{target}
+ ◊xref["url"]{target}}
 
-For this tag function, we will assume that target is a single text argument,
-because that's how it will be used.
-But to be safe, we'll raise an arity error if we get too many arguments.
+For this tag function, we'll assume that @racket[_target] is a single text argument, because that's how it will be used. But to be safe, we'll raise an error if we get too many arguments.
 
-;; What makes this function a little tricky is that the url argument is optional,
-;; but if it appears, it appears first.
-;; This is a good job for @racket[case-lambda], which lets you define separate branches for your function
-;; depending on the total number of arguments provided.
-;; one argument: must be a target. Note the Rackety recursive technique here:
-;; we'll create a second argument and then call @racket[xref] again.
-;; two arguments: must be a url followed by a target.
-;; more than two arguments: raise an arity error.
+What makes this function a little tricky is that @racket[_url] is optional, but if it appears, it appears first. That makes this a good job for @racket[case-lambda], which lets you define separate branches for your function depending on the number of arguments provided. 
+
+In the one-argument case, rather than duplicate the line of code in the two-argument case, we call the function again with a second argument.
 
 @chunk[<xref>
        (define xref
@@ -519,35 +525,32 @@ But to be safe, we'll raise an arity error if we get too many arguments.
  (target->url
   [target string?])
  string?]
-Convert the target text of an xref into a url.
+Convert the target text of an @racket[xref] into a url.
 
-This function depends on my commitment to name my source files in a logical, predictable way,
-e.g., "Why Does Typography Matter?" becomes "why-does-typography-matter.html".
-If you needed to associate targets with URLs arbitrarily, you could store the targets and URLs
-in an association list or hashtable.
+This function depends on a personal commitment to name source files in a logical, predictable way, e.g., ``Why Does Typography Matter?'' becomes @tt{why-does-typography-matter.html}. This way, the name of the source file for a page can be derived from its title.
 
-I do it this way so that it's easy to add new pages and xrefs, without the extra housekeeping step
-The name of the source file for a page is determined by its title.
+If you needed to associate targets with URLs arbitrarily, you could store the targets and URLs in an association list or hashtable. But I prefer this approach, because it's easy to add new pages and cross-references, without the extra housekeeping step.
+
 
 @chunk[<target->url>
        (define (target->url target)
          (define nonbreaking-space (~a #\u00A0))
-         (let* ([xn target]
-                [xn (string-trim xn "?")] ; delete a question mark at the end
-                [xn (string-downcase xn)] ; put string in all lowercase
-                [xn (regexp-replace* #rx"é" xn "e")] ; remove accented é
-                [xn (if (regexp-match #rx"^foreword" xn) "foreword" xn)] ; special rule for foreword
-                [xn (if (regexp-match #rx"^table of contents" xn) "toc" xn)] ; special rule for toc
-                [xn (string-replace xn nonbreaking-space "-")] ; replace nbsp with hyphen
-                [xn (string-replace xn " " "-")]) ; replace word space with hyphen
-           (format "~a.html" xn)))]
+         (let* ([x target]
+                [x (string-trim x "?")] ; delete a question mark at the end
+                [x (string-downcase x)] ; put string in all lowercase
+                [x (regexp-replace* #rx"é" x "e")] ; remove accented é
+                [x (if (regexp-match #rx"^foreword" x) "foreword" x)] ; special rule for foreword
+                [x (if (regexp-match #rx"^table of contents" x) "toc" x)] ; special rule for toc
+                [x (string-replace x nonbreaking-space "-")] ; replace nbsp with hyphen
+                [x (string-replace x " " "-")]) ; replace word space with hyphen
+           (format "~a.html" x)))]
 
 
 @defproc[
  (xref-font
   [font-name string?])
  txexpr?]
-Special version of @racket[xref] for the fontrec directory.
+Special version of @racket[xref] for the @filepath{fontrec} subdirectory.
 
 @chunk[<xref-font>
        (define (xref-font font-name)
@@ -561,20 +564,19 @@ This could also be done with @racket[make-default-tag-function]. And as a rule o
 macros for the times you can't avoid using them. Otherwise, use a function.
 
 We'll bend that rule here because this is a quick & easy example macro. What makes it suitable to be
-handled as a macro is that we want to use the name of the identifier (for instance 'topic') as an
-argument to the function. Ordinarily we can't do that, but with a macro, we can.
+handled as a macro is that we want to use the name of the identifier (for instance @racket[topic]) as an
+argument to the function. With a function, we can't do that. But with a macro, we can.
 
-@racket[define-syntax-rule] is the easiest macro form: essentially you're writing a code template
-with arguments that will be filled in when you invoke the macro.
-
-; first, heading-name is used as an identifier
-; then it's used as a symbol that is converted to a string.
-
+@racket[define-syntax-rule] is the easiest macro form: essentially you're writing a code template with arguments that will be filled in when you invoke the macro. Notice how @racket[heading-name] appears in two roles: first as an identifier name, and then as a literal symbol.
 
 @chunk[<define-heading>
        (define-syntax-rule (define-heading heading-name tag)
          (define heading-name
-           (make-default-tag-function tag #:class (symbol->string 'heading-name))))]
+           (make-default-tag-function tag 
+                                      #:class (symbol->string 'heading-name))))]
+
+``Wait, why does @racket['heading-name] not produce the literal symbol @racket['heading-name]?'' The @racket['heading-name] syntax is just shorthand for @tt{(quote heading-name)}. Because this is a macro, the @racket[heading-name] inside this expression gets replaced with the value of the macro argument @racket[heading-name] before @racket[quote] is evaluated.
+
 
 @deftogether[(
               @defproc[
@@ -597,6 +599,7 @@ with arguments that will be filled in when you invoke the macro.
  (chapter
   [tx-element xexpr?] ...)
  txexpr?])]
+Make a heading with a certain tag, using the @racket[define-heading] macro.
 
 @chunk[<headings>
        (define-heading topic 'h3)
@@ -606,16 +609,14 @@ with arguments that will be filled in when you invoke the macro.
        (define-heading chapter 'h1)]
 
 @defform[(define-heading-from-metas heading-name)]
-Macro for defining a function that makes a heading by relying on data in the metas.
+Macro for defining a function that makes a heading by pulling the page title out of the metas.
 
-This macro relies on @racket[syntax-case] rather than @racket[define-syntax-rule].
-It's a little more complicated, but also more flexible (and more idiomatic in Racket).
-@racket[define-syntax-rule] is actually a special simplified version of @racket[syntax-case].
-The best advice on learning macros is to start with @racket[syntax-case], because you can't live without it.
-Good tutorial: http://www.greghendershott.com/fear-of-macros/pattern-matching.html
+This macro relies on @racket[syntax-case] rather than @racket[define-syntax-rule]. It's a little more complicated, but also more flexible (and more idiomatic in Racket). @racket[define-syntax-rule] is actually a special-case version of @racket[syntax-case]. The best advice on learning macros is to start with @racket[syntax-case], because you can't live without it.
+
+@margin-note{Greg Hendershott's @link["http://www.greghendershott.com/fear-of-macros/pattern-matching.html"]{Fear of Macros} is a great place to start if you're new to Racket macros.}
 
 Otherwise this macro is similar to @racket[define-heading], except that we want to introduce a new identifier
-based on the name given to the macro. So if we pass @racket[topic] to the macro, it will define
+with a different name, but based on the argument given to the macro. So if we pass @racket[topic] to the macro, it will define
 an identifier called @racket[topic-from-metas]. You can't do that with @racket[define-syntax-rule].
 
 @chunk[<define-heading-from-metas>
@@ -623,7 +624,8 @@ an identifier called @racket[topic-from-metas]. You can't do that with @racket[d
        (define-syntax (define-heading-from-metas stx)
          (syntax-case stx ()
            [(_ heading-name)
-            (with-syntax ([heading-from-metas (format-id stx "~a-from-metas" #'heading-name)])
+            (with-syntax ([heading-from-metas 
+                           (format-id stx "~a-from-metas" #'heading-name)])
               #'(define (heading-from-metas metas)
                   (heading-name (hash-ref metas meta-key-for-page-title))))]))]
 
@@ -649,7 +651,7 @@ an identifier called @racket[topic-from-metas]. You can't do that with @racket[d
   [topic-xexpr xexpr?]
   [tx-element xexpr?] ...)
  txexpr?]
-Convert a topic + subhead into one HTML markup unit
+Convert a topic + subhead into one HTML markup unit. Notice the use of @racket[no-hyphens-attr], which we defined in the @secref["Values"] section.
 
 @chunk[<hanging-topic>
        (define (hanging-topic topic-xexpr . tx-elements)
@@ -660,59 +662,34 @@ Convert a topic + subhead into one HTML markup unit
  (quick-table
   [table-rows xexpr?] ...)
  txexpr?]
-Make an HTML table using simplified notation
+Make an HTML table using simplified notation. In HTML, wrapping every paragraph in <p> tags is a terrible and dull task. But formatting tables is even worse. This function lets you make simple tables using @litchar{|} to signify columns, and line breaks to signify rows.
 
-◊quick-table{heading left | heading center | heading right
-upper left | upper center | upper right
-lower left | lower center | lower right}
+@terminal{
+ ◊quick-table{
+  heading left | heading center | heading right
+  upper left | upper center | upper right
+  lower left | lower center | lower right}}
 
-In HTML, wrapping every paragraph in <p> tags is a terrible and dull task.
-But formatting tables is even worse.
+This function assumes that each row has the same number of columns. You could improve it to fill in blank cells in rows that need them.
 
-This function lets you make simple tables using "|" to signify columns,
-and line breaks to signify rows.
-
-Let's uncork a few more whizzy Racket commands while we're at it.
-
-This function assumes that each row has the same number of columns.
-You could improve it to fill in blank cells in rows that need them.
-
+The idea is to break down the input into table headings and cells, and then work back up, wrapping each layer in the appropriate tags.
 
 @chunk[<quick-table>
        (define (quick-table . tx-elements)
-         
-         ;; In Pollen, a multiline tx-elements block arrives as a list of lines and linebreak characters.
-         ;; (A situation we already encountered in @racket[detect-list-items].)
          (define rows-of-text-cells
-           (let ([text-rows (filter-not whitespace? tx-elements)]) ; throw out the linebreak characters
-             ;; @racket[for/list] is very handy: a @racket[for] loop that gathers the results into a list.
-             ;; Think of it as a more flexible version of @racket[map].
+           (let ([text-rows (filter-not whitespace? tx-elements)])
              (for/list ([text-row (in-list text-rows)])
-                       ;; the cells are delimited within a row by "|", so split on this char
                        (for/list ([text-cell (in-list (string-split text-row "|"))])
-                                 (string-trim text-cell))))) ; trim remaining whitespace from cell text
+                                 (string-trim text-cell))))) 
          
-         ;; Racket's @racket[match] functions are very useful.
-         ;; Among other things, they can be used for Python-style data unpacking.
-         ;; The expression on the right will produce three tag functions;
-         ;; the @racket[match-define] assigns them to three new identifiers.
          (match-define (list tr-tag td-tag th-tag) (map make-default-tag-function '(tr td th)))
          
-         ;; now we'll take our rows of text cells and apply cell-level HTML tags.
-         ;; the first row will get 'th tags; the other rows get 'td tags.
          (define html-rows
-           ;; another use of @racket[match]. Notice how this @racket[cons] is used to separate a list into parts ...
            (match-let ([(cons header-row other-rows) rows-of-text-cells])
-             ;; ... whereas this @racket[cons] is used to combine parts into a list
              (cons (map th-tag header-row)
                    (for/list ([row (in-list other-rows)])
                              (map td-tag row)))))
          
-         ;; With the cells tagged up, add the row tags and finally the table tag.
-         ;; Notice that we use @racket[apply] with @racket[tr-tag] to unpack the list of cells in each html-row.
-         ;; Remember that @racket[apply] does something very simple:
-         ;; Converts an expression of the form @racket[(apply func (list arg1 arg2 ...))]
-         ;; Into @racket[(func arg1 arg2 ...)]
          (cons 'table (for/list ([html-row (in-list html-rows)])
                                 (apply tr-tag html-row))))]
 
@@ -722,27 +699,22 @@ You could improve it to fill in blank cells in rows that need them.
  txexpr?]
 Create a thumbnail of a PDF that links to the PDF.
 
-This function will only work properly if you have @racket[sips] on your system
-(command-line image-processing program, included with OS X).
+This function will only work properly if you have @tt{sips} on your system (= command-line image-processing program, included with OS X).
 
-This shows how you can fold other kinds of project housekeeping into Pollen commands.
-Here, the function generates the thumbnail it needs when the page is compiled.
+This shows how you can fold other kinds of project housekeeping into Pollen commands. Here, the function generates the thumbnail it needs when the page is compiled.
 
-One disadvantage of this approach is that the thumbnail will *always* be generated on recompile,
-though you could put in some logic to avoid this (e.g., check the modification date of the PDF).
-In this case, @racket[sips] is fast enough that it's not bothersome.
+One disadvantage of this approach is that the thumbnail will always be generated on recompile, though you could put in some logic to avoid this (e.g., check the modification date of the PDF). In this case, @tt{sips} is fast enough that it's not bothersome.
 
 @chunk[<pdf-thumbnail>
        (define (pdf-thumbnail-link pdf-pathstring)
          (define img-extension "gif")
-         (define img-pathstring (->string (add-ext (remove-ext pdf-pathstring) img-extension)))
+         (define img-pathstring 
+           (->string (add-ext (remove-ext pdf-pathstring) img-extension)))
          (define sips-command
            (format "sips -Z 2000 -s format ~a --out '~a' '~a' > /dev/null"
                    img-extension img-pathstring pdf-pathstring))
          (link pdf-pathstring (if (system sips-command)
                                   `(img ((src ,img-pathstring)))
-                                  ;; usually one would raise an error on the next line,
-                                  ;; but for instructional purposes, we'll have a graceful fail
                                   "sips not available")))]
 
 @deftogether[(
@@ -759,53 +731,55 @@ In this case, @racket[sips] is fast enough that it's not bothersome.
   [base-name string?])
  txexpr?]
                )]
-A few convenience variants of @racket[pdf-thumbnail-link]
+A few convenience variants of @racket[pdf-thumbnail-link].
 
 @chunk[<pdf-thumbnail-variants>
        (define (pdf-thumbnail-link-from-metas metas)
-         (define-values (dir fn _) (split-path (add-ext (remove-ext* (hash-ref metas 'here-path)) "pdf")))
+         (define-values (dir fn _) 
+           (split-path (add-ext (remove-ext* (hash-ref metas 'here-path)) "pdf")))
          (pdf-thumbnail-link (->string fn)))
        
        (define (before-and-after-pdfs base-name)
          `(div 
            (div ((class "pdf-thumbnail"))
                 "before" (br)
-                ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-before.pdf" base-name)))
+                ,(pdf-thumbnail-link 
+                  (format "pdf/sample-doc-~a-before.pdf" base-name)))
            (div ((class "pdf-thumbnail"))
                 "after" (br)
-                ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-after.pdf" base-name)))))
+                ,(pdf-thumbnail-link 
+                  (format "pdf/sample-doc-~a-after.pdf" base-name)))))
        
        (define (alternate-after-pdf base-name)
          `(div ((class "pdf-thumbnail"))
-               "after (alternate)" (br)
-               ,(pdf-thumbnail-link (format "pdf/sample-doc-~a-after-alternate.pdf" base-name))))]
+               "after (alternate)" 
+               (br)
+               ,(pdf-thumbnail-link 
+                 (format "pdf/sample-doc-~a-after-alternate.pdf" base-name))))]
 
 @defproc[
  (root
-  [tx-elements (listof txexpr?)] ...)
+  [tx-element txexpr?] ...)
  txexpr?]
-Decode page content
+Decode page content.
 
-In a Pollen markup source, the output is a tagged X-expression that starts with @racket[root]:
+In a  @seclink["Writing_with_Pollen_markup"
+               #:doc '(lib "pollen/scribblings/pollen.scrbl")]{Pollen markup} source, the output is a tagged X-expression that starts with @racket[root]:
 
-(root (div ((class "headline")) "Page title") ...)
+@terminal{(root (div ((class "headline")) "Page title") ...)}
 
-Recall that every Pollen tag calls a function with the same name (if it exists, otherwise it just
-becomes a tag). This is also true of @racket[root].
+Recall that every Pollen tag calls a function with the same name (if it exists, otherwise it just becomes a tag). This is also true of @racket[root].
 
-@racket[root] has slightly special status inasmuch as it is the top tag of the X-expression,
-and thus the last tag function that will get called. Therefore, @racket[root] is a good place to put any
-processing that should happen once all the page content has been filled in.
+@racket[root] has slightly special status inasmuch as it is the top tag of the X-expression, and thus the last tag function that will get called. Therefore, @racket[root] is a good place to put any processing that should happen once all the page content has been filled in.
 
-Often, you'll want to use a @racket[decode] function, which can recursively perform different kinds of
-processing on different types of page elements.
+Often, you'll want to use a @racket[decode] or @racket[decode-elements] function, which can recursively perform different kinds of processing on different types of page elements.
+
+In this case, we'll use @racket[decode-elements] twice. First, we'll use it just to detect paragraphs. We'll do this so that they're treated as @seclink["Block" #:doc '(lib "pollen/scribblings/pollen.scrbl")]{blocks} in the second phase, which does the rest of the processing.
 
 @chunk[<root>
        (define (root . elems)
-         ;; We will do the decoding in two steps.
-         ;; Detect paragraphs first so that they're treated as block-txexprs in next phase.
-         (define elements-with-paragraphs (decode-elements elems #:txexpr-elements-proc detect-paragraphs))
-         ;; Then do the rest of the decoding normally.
+         (define elements-with-paragraphs 
+           (decode-elements elems #:txexpr-elements-proc detect-paragraphs))
          (list* 'div '((id "doc"))
                 (decode-elements elements-with-paragraphs
                                  #:block-txexpr-proc hyphenate-block
@@ -818,14 +792,12 @@ processing on different types of page elements.
  (hyphenate-block
   [block-tx txexpr?])
  txexpr?]
-Helper function for root decoder 
+Helper function for @racket[root] decoder that handles hyphenation.
+
+The basic @racket[hyphenate] function comes from the @racketmodname[hyphenate] module. We could attach @racket[hyphenate] to our @racket[root] decoder as a string processor rather than block processor. But we want to be able to handle our no-hyphens flag (aka @racket[no-hyphens-attr]), which is stored in the attributes of the X-expression. Therefore, we have to look at blocks, not just strings.
 
 @chunk[<hyphenate-block>
        (define (hyphenate-block block-tx)
-         ;; The basic @racket[hyphenate] function comes from the @racket[hyphenate] module.
-         ;; We could attach @racket[hyphenate] to our decoder as a string processor rather than block processor.
-         ;; But we want to be able to handle our "no-hyphens" flag (aka @racket[no-hyphens-attr]).
-         ;; So we want to look at blocks, not strings.
          (define (no-hyphens? tx)
            (or (member (get-tag tx) '(th h1 h2 h3 h4 style script)) ; don't hyphenate these, no matter what
                (member no-hyphens-attr (get-attrs tx)))) ; also don't hyphenate blocks with @racket[no-hyphens-attr]
@@ -840,15 +812,10 @@ Helper function for root decoder
  txexpr?]
 Perform tricky processing on quotation marks.
 
-Because I'm a typography snob I like to push quotation marks into the margin a little bit
-when they appear at the left edge of a line (aka "hanging quotes").
-
-This function just wraps left-hand quote marks in two little tags ("push" and "pull")
-that I can then manipulate in CSS to get the effect.
+Because I'm a typography snob I like to push quotation marks into the margin a little bit when they appear at the left edge of a line (aka hanging quotes). This function just wraps left-hand quote marks in two little tags (@tt{push} and @tt{pull}) that I can then manipulate in CSS to get the effect.
 
 @chunk[<make-quotes-hangable>
        (define (make-quotes-hangable str)
-         ;; using @racket[regexp-match*] with #:gap-select? makes it act like a funny kind of string splitter
          (define substrs (regexp-match* #px"\\s?[“‘]" str #:gap-select? #t))
          (if (= (length substrs) 1) ; no submatches
              (car substrs)
@@ -865,14 +832,12 @@ that I can then manipulate in CSS to get the effect.
  (fix-em-dashes
   [str string?])
  txexpr?]
-Helper function for root decoder
+Helper function for @racket[root] decoder.
 
-When I type an em dash in my sources, I will often leave a space around it,
-but I don't want spaces in the output, so this function removes them.
+When I type an em dash in my sources, I will often leave a space around it, but I don't want spaces in the output, so this function removes them.
 
 @chunk[<fix-em-dashes>
        (define (fix-em-dashes str)
-         ;; \u00A0 = nbsp, \u2009 = thinsp (neither included in \s)   
          (let* ([str (regexp-replace* #px"(?<=\\w)[\u00A0\u2009\\s]—" str "—")]
                 [str (regexp-replace* #px"—[\u00A0\u2009\\s](?=\\w)" str "—")])
            str))]
@@ -955,7 +920,7 @@ For use in our HTML templates. We could also define this function inside a templ
 
 @section{Finally}
 
-This last incantation is needed so @racketmodname[scribble/lp2] knows how to put together all the code chunks we've introduced in this file.
+This last incantation is needed so this @racketmodname[scribble/lp2] document knows how to put together all the code chunks we've introduced in this file.
 
 @chunk[<*>
        <base-require>
