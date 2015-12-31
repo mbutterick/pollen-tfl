@@ -18,3 +18,9 @@ Icon
 # Files that might appear on external disk
 .Spotlight-V100
 .Trashes
+
+# generated documentation
+scribblings/*.js
+scribblings/*.css
+!scribblings/mb.css
+scribblings/*.html
