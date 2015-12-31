@@ -6,7 +6,7 @@ The website is built with [Pollen](http://pollenpub.com). I’m sharing this cod
 
 To run this project, you need to first install [Racket](https://github.com/racket/racket) and [Pollen](https://github.com/mbutterick/pollen).
 
-## Optional installation
+## Installation
 
 Using Racket 6.0+, install from the command line:
 
@@ -15,8 +15,14 @@ Using Racket 6.0+, install from the command line:
 And update like so:
 
     raco pkg update --update-deps pollen-tfl
+
+
+## Documentation
     
-Installation is optional because you can also clone the repo in the usual ways and run it with Pollen.
+Scribble documentation is provided for the main `pollen.rkt` file. (Search for the `pollen-tfl` module in the Racket docs.)
+
+Other source files contain comments.
+
 
 ## But this repo is not open source
 
@@ -30,7 +36,3 @@ I do **NOT** give you permission to reuse any of the content of this web-based b
 
 If you have questions not covered here, please post them on the Pollen mailing list: http://groups.google.com/forum/#!forum/pollenpub
 
-
-## Which files are commented?
-
-[`pollen.rkt`](https://github.com/mbutterick/pollen-tfl/blob/master/pollen.rkt)
