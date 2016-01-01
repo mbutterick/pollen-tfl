@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@title{Pollen sample project: Typography for Lawyers}
+@title{Pollen sample project: Typography for Lawyers}
 
 @author[(author+email "Matthew Butterick" "mb@mbtype.com")]
 
