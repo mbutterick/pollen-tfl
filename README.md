@@ -23,6 +23,8 @@ Scribble documentation is provided for the main `pollen.rkt` file. (Search for t
 
 Other source files contain comments.
 
+You can also read the docs [online, right now.](http://pkg-build.racket-lang.org/doc/pollen-tfl/)
+
 
 ## But this repo is not open source
 
