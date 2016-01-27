@@ -65,6 +65,7 @@ Other libraries we'll be using. @racketmodname[sugar] and @racketmodname[txexpr]
          sugar
          txexpr
          hyphenate
+         "../helper.rkt"
          "../pricing-table.rkt")]
 
 
