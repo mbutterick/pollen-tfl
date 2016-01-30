@@ -1,5 +1,5 @@
 #lang racket/base
 (require pollen/private/whitespace
-         pollen/unstable/mb)
+         pollen/unstable/typography)
 (provide (all-from-out pollen/private/whitespace
-         pollen/unstable/mb))
+         pollen/unstable/typography))
