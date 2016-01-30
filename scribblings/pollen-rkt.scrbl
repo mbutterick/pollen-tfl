@@ -65,7 +65,8 @@ Other libraries we'll be using. @racketmodname[sugar] and @racketmodname[txexpr]
          sugar
          txexpr
          hyphenate
-         "../helper.rkt"
+         pollen/private/whitespace
+         pollen/unstable/typography
          "../pricing-table.rkt")]
 
 
@@ -360,10 +361,10 @@ It also makes it possible to change the fiddly HTML markup from one central loca
  txexpr?]
 Create a span with the class @tt{glyph}. 
 
-Here, we'll use @racket[make-default-tag-function], which is an easy way to make a simple tag function. Any keywords passed in will be propagated to every use of the tag function.
+Here, we'll use @racket[default-tag-function], which is an easy way to make a simple tag function. Any keywords passed in will be propagated to every use of the tag function.
 
 @chunk[<glyph>
-       (define glyph (make-default-tag-function 'span #:class "glyph"))]
+       (define glyph (default-tag-function 'span #:class "glyph"))]
 
 
 @defproc[
@@ -406,8 +407,8 @@ Our list of elements could contain sequences like @racket['("\n" "\n" "\n")], wh
            (and (string? elem) (regexp-match list-item-separator-pattern elem)))
          (define list-of-li-elems (filter-split elems-merged list-item-break?))
          (define list-of-li-paragraphs 
-           (map (λ(li) (detect-paragraphs li #:force? #t)) list-of-li-elems))
-         (define li-tag (make-default-tag-function 'li))
+           (map (λ(li) (decode-paragraphs li #:force? #t)) list-of-li-elems))
+         (define li-tag (default-tag-function 'li))
          (map (λ(lip) (apply li-tag lip)) list-of-li-paragraphs))]
 
 @margin-note{Explicit type checking — e.g., @racket[(string? elem)] — is common in Racket. You can do ``duck typing'' (see @racket[with-handlers]) but it's not idiomatic. IMO this is wise — better to have an explicit, readable test (likse @racket[string?]) rather than an implicit, indirect one (``If the input isn't a @racket[string?], then a certain error will arise.'')}
@@ -417,8 +418,8 @@ Because of the expression-based structure of Racket, it's often possible to writ
 
 @chunk[<bad-idea>
        (define (detect-list-items elems)
-         (map (compose1 (curry apply (make-default-tag-function 'li))
-                        (curryr detect-paragraphs #:force? #t))
+         (map (compose1 (curry apply (default-tag-function 'li))
+                        (curryr decode-paragraphs #:force? #t))
               (filter-split (merge-newlines elems)
                             (λ(x) (and (string? x)
                                        (regexp-match #rx"\n\n\n+" x))))))]
@@ -561,7 +562,7 @@ Special version of @racket[xref] for the @filepath{fontrec} subdirectory.
 @defform[(define-heading heading-name tag-name)]
 Macro for defining a function that makes a heading.
 
-This could also be done with @racket[make-default-tag-function]. And as a rule of thumb, it's wise to reserve
+This could also be done with @racket[default-tag-function]. And as a rule of thumb, it's wise to reserve
 macros for the times you can't avoid using them. Otherwise, use a function.
 
 We'll bend that rule here because this is a quick & easy example macro. What makes it suitable to be
@@ -573,8 +574,8 @@ argument to the function. With a function, we can't do that. But with a macro, w
 @chunk[<define-heading>
        (define-syntax-rule (define-heading heading-name tag)
          (define heading-name
-           (make-default-tag-function tag 
-                                      #:class (symbol->string 'heading-name))))]
+           (default-tag-function tag 
+             #:class (symbol->string 'heading-name))))]
 
 ``Wait, why does @racket['heading-name] not produce the literal symbol @racket['heading-name]?'' The @racket['heading-name] syntax is just shorthand for @tt{(quote heading-name)}. Because this is a macro, the @racket[heading-name] inside this expression gets replaced with the value of the macro argument @racket[heading-name] before @racket[quote] is evaluated.
 
@@ -683,7 +684,7 @@ The idea is to break down the input into table headings and cells, and then work
                        (for/list ([text-cell (in-list (string-split text-row "|"))])
                                  (string-trim text-cell))))) 
          
-         (match-define (list tr-tag td-tag th-tag) (map make-default-tag-function '(tr td th)))
+         (match-define (list tr-tag td-tag th-tag) (map default-tag-function '(tr td th)))
          
          (define html-rows
            (match-let ([(cons header-row other-rows) rows-of-text-cells])
@@ -775,12 +776,12 @@ Recall that every Pollen tag calls a function with the same name (if it exists, 
 
 Often, you'll want to use a @racket[decode] or @racket[decode-elements] function, which can recursively perform different kinds of processing on different types of page elements.
 
-In this case, we'll use @racket[decode-elements] twice. First, we'll use it just to detect paragraphs. We'll do this so that they're treated as @seclink["Block" #:doc '(lib "pollen/scribblings/pollen.scrbl")]{blocks} in the second phase, which does the rest of the processing.
+In this case, we'll use @racket[decode-elements] twice. First, we'll use it just to detect paragraphs. We'll do this so that they're treated as blocks (see @racket[block-txexpr?]) in the second phase, which does the rest of the processing.
 
 @chunk[<root>
        (define (root . elems)
          (define elements-with-paragraphs 
-           (decode-elements elems #:txexpr-elements-proc detect-paragraphs))
+           (decode-elements elems #:txexpr-elements-proc decode-paragraphs))
          (list* 'div '((id "doc"))
                 (decode-elements elements-with-paragraphs
                                  #:block-txexpr-proc hyphenate-block
@@ -849,19 +850,19 @@ When I type an em dash in my sources, I will often leave a space around it, but 
 Presented without docs or comment, as it should be obvious at this point what they do.
 
 @chunk[<misc-functions>
-       (define omission (make-default-tag-function 'div #:class "omission"))
+       (define omission (default-tag-function 'div #:class "omission"))
        
-       (define mono (make-default-tag-function 'span #:class "mono"))
+       (define mono (default-tag-function 'span #:class "mono"))
        
-       (define font-details (make-default-tag-function 'div #:class "font-details"))
+       (define font-details (default-tag-function 'div #:class "font-details"))
        
        (define mb-font-specimen
-         (make-default-tag-function 'div #:class "mb-font-specimen" #:contenteditable "true"))
+         (default-tag-function 'div #:class "mb-font-specimen" #:contenteditable "true"))
        
        (define (margin-note . xs)
          `(div ((class "margin-note") ,no-hyphens-attr) ,@xs))
        
-       (define os (make-default-tag-function 'span #:class "os"))
+       (define os (default-tag-function 'span #:class "os"))
        
        (define (gap [size 1.5])
          `(div ((style ,(format "height: ~arem" size)))))
@@ -872,9 +873,9 @@ Presented without docs or comment, as it should be obvious at this point what th
        (define (indented #:hyphenate [hyphenate #t]  . xs)
          `(p ((class "indented"),@(if (not hyphenate) (list no-hyphens-attr) null)) ,@xs))
        
-       (define caption-runin (make-default-tag-function 'span #:class "caption-runin"))
+       (define caption-runin (default-tag-function 'span #:class "caption-runin"))
        
-       (define caption (make-default-tag-function 'span #:class "caption"))
+       (define caption (default-tag-function 'span #:class "caption"))
        
        (define (captioned name . xs)
          `(table ((class "captioned indented"))
