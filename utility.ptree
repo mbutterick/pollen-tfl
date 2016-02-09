@@ -1,5 +1,5 @@
 #lang pollen
-◊(require sugar/coerce sugar/string sugar/file)
+◊(require sugar/coerce sugar/unstable/string sugar/file)
 
 error.html
 
