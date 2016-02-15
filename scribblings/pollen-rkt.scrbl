@@ -28,7 +28,7 @@ Aside from that wrinkle, all the code shown here is standard @racketmodname[rack
 The @filepath{pollen.rkt} source file is the main source of functions and values for the source files in a Pollen project. Everything provided from a @filepath{pollen.rkt} is automatically available to @|lang| @racketmodname[pollen] source files in the
 same directory or subdirectories (unless superseded by another @filepath{pollen.rkt} within a subdirectory).
 
-For more, see @secref["Using_the__pollen_rkt__file"
+For more, see @secref["Introducing__pollen_rkt_"
                       #:tag-prefixes '("tutorial-3")
                       #:doc '(lib "pollen/scribblings/pollen.scrbl")] in the main Pollen docs.
 
