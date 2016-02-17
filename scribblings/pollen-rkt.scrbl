@@ -1,6 +1,6 @@
 #lang scribble/lp2
 @(require scribble/manual)
-@(require (for-label racket txexpr sugar pollen/decode pollen/tag hyphenate rackunit) scribble/eval pollen/scribblings/mb-tools pollen/private/whitespace)
+@(require (for-label racket txexpr sugar pollen/decode pollen/tag hyphenate rackunit) scribble/eval pollen/scribblings/mb-tools)
 @(define my-eval (make-base-eval))
 @declare-exporting[pollen-tfl/pollen] 
 @(my-eval '(require txexpr sugar racket/list))
@@ -65,7 +65,6 @@ Other libraries we'll be using. @racketmodname[sugar] and @racketmodname[txexpr]
          sugar
          txexpr
          hyphenate
-         pollen/private/whitespace
          pollen/unstable/typography
          "../pricing-table.rkt")]
 
