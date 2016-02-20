@@ -8,7 +8,7 @@ The ◊em{paragraph mark} ◊glyph{¶} is used when citing documents with sequen
 
 The ◊em{section mark} ◊glyph{§} is used when citing documents with numbered or lettered sections (e.g., statutes).
 
-A paragraph mark or section mark should always be followed by a nonbreaking space. The ◊xref{nonbreaking space} acts like glue that keeps the mark joined with the numeric reference that follows.
+A paragraph mark or section mark should always be followed by a nonbreaking space. The ◊xref["nonbreaking-spaces.html"]{nonbreaking space} acts like glue that keeps the mark joined with the numeric reference that follows.
 
 Without the nonbreaking space, the mark and the reference can end up on separate lines or pages. This can confuse readers.
 
