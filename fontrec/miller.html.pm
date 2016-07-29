@@ -4,4 +4,4 @@
 
 ◊(pdf-thumbnail-link-from-metas metas)
 
-◊buylink["https://www.myfonts.com/fonts/fontbureau/miller/"]{MyFonts}
+◊buylink["https://store.typenetwork.com/foundry/cartercone/series/miller?family=miller-text"]{Font Bureau}

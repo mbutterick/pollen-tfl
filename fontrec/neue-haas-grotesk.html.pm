@@ -4,4 +4,4 @@
 
 ◊(pdf-thumbnail-link-from-metas metas)
 
-◊buylink["https://www.myfonts.com/fonts/linotype/neue-haas-grotesk/"]{MyFonts}
+◊buylink["https://store.typenetwork.com/foundry/fontbureau/series/neue-haas-grotesk?family=neue-haas-grotesk-text"]{Font Bureau}
