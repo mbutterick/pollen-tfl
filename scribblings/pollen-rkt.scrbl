@@ -61,6 +61,7 @@ Other libraries we'll be using. @racketmodname[sugar] and @racketmodname[txexpr]
 @chunk[<project-require>
        (require
          pollen/decode
+         pollen/file
          pollen/tag
          sugar
          txexpr
@@ -526,25 +527,40 @@ In the one-argument case, rather than duplicate the line of code in the two-argu
  (target->url
   [target string?])
  string?]
-Convert the target text of an @racket[xref] into a url.
+Convert the target text of an @racket[xref] into a URL.
 
 This function depends on a personal commitment to name source files in a logical, predictable way, e.g., ``Why Does Typography Matter?'' becomes @tt{why-does-typography-matter.html}. This way, the name of the source file for a page can be derived from its title.
 
 If you needed to associate targets with URLs arbitrarily, you could store the targets and URLs in an association list or hashtable. But I prefer this approach, because it's easy to add new pages and cross-references, without the extra housekeeping step.
 
+Well, almost. One wrinkle that arises is connecting singular and plural versions of the target text to the right URL. For instance, ``typewriter habit'' and ``typewriter habits'' should both link to @tt{typewriter-habits.html}. But ``point size'' and ``point sizes'' should both link to @tt{point-size.html}. Again, you could keep a list manually. But that's a drag. Instead, let's make the singular and plural versions of the target (called @racket[target-variants]) and compare these against a list of all possible HTML files in the project directory (called @racket[actual-filenames]). When we find a match, that will be the URL we're looking for.
+
 
 @chunk[<target->url>
-       (define (target->url target)
-         (define nonbreaking-space (~a #\u00A0))
-         (let* ([x target]
-                [x (string-trim x "?")] ; delete a question mark at the end
-                [x (string-downcase x)] ; put string in all lowercase
-                [x (regexp-replace* #rx"é" x "e")] ; remove accented é
-                [x (if (regexp-match #rx"^foreword" x) "foreword" x)] ; special rule for foreword
-                [x (if (regexp-match #rx"^table of contents" x) "toc" x)] ; special rule for toc
-                [x (string-replace x nonbreaking-space "-")] ; replace nbsp with hyphen
-                [x (string-replace x " " "-")]) ; replace word space with hyphen
-           (format "~a.html" x)))]
+         (define (format-as-filename target)
+           (define nonbreaking-space (string #\u00A0))
+           (let* ([x target]
+                  [x (string-trim x "?")] ; delete a question mark at the end
+                  [x (string-downcase x)] ; put string in all lowercase
+                  [x (regexp-replace* #rx"é" x "e")] ; remove accented é
+                  [x (if (regexp-match "times new roman" x) "a-brief-history-of-times-new-roman" x)] ; special rule for TNR
+                  [x (if (regexp-match "foreword" x) "foreword" x)] ; special rule for foreword
+                  [x (if (regexp-match "table of contents" x) "toc" x)] ; special rule for toc
+                  [x (string-replace x nonbreaking-space "-")] ; replace nbsp with hyphen
+                  [x (string-replace x " " "-")]) ; replace word space with hyphen
+             (format "~a.html" x)))
+
+       (define (target->url target)         
+         (define actual-filenames
+           (map path->string (remove-duplicates (map ->output-path (directory-list (string->path "."))))))
+         (define target-variants (let* ([plural-regex #rx"s$"]
+                                        [singular-target (regexp-replace plural-regex target "")]
+                                        [plural-target (string-append singular-target "s")])
+                                   (list singular-target plural-target)))
+         (for*/first ([tfn (in-list (map format-as-filename target-variants))]
+                      [afn (in-list actual-filenames)]
+                      #:when (equal? tfn afn))
+                     tfn))]
 
 
 @defproc[
@@ -555,7 +571,7 @@ Special version of @racket[xref] for the @filepath{fontrec} subdirectory.
 
 @chunk[<xref-font>
        (define (xref-font font-name)
-         (xref (format "fontrec/~a" (target->url font-name)) font-name))]
+         (xref (format "fontrec/~a" (format-as-filename font-name)) font-name))]
 
 
 @defform[(define-heading heading-name tag-name)]
