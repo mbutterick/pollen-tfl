@@ -218,8 +218,6 @@ margin-right: ◊|default-margin|;
 
 ◊(define content-width "29rem")
 #content {
-    border-top: 0.3rem solid ◊|content-rule-color|;
-    border-bottom: 0.3rem solid ◊|content-rule-color|;
     width: ◊|content-width|;
     padding: 3rem 0 8rem 0; 
 }
@@ -600,65 +598,82 @@ margin-left: ◊(+ single-quote-width)em;
 
 ◊(define nav-width "3rem")
 ◊(define big-nav-width "8rem")
-◊(define border-width "0px")
 
 
-.nav-inner {
-    border: solid ◊border-width grey;
+#top-stripe {
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  left: 2rem;
+  width: 38rem;
+  border-bottom: 0.2rem solid ◊|content-rule-color|;
+}
+
+#prev .nav-inner,
+#next .nav-inner {
     position: fixed;
 }
 
 
 #bottom .nav-inner {
+    border-top: 0.2rem solid ◊|content-rule-color|;
     opacity: 0.95;
     position: absolute;
+    left: 2rem;
+    width: 38rem;
+}
+
+#bottom a {
+  border-bottom: inherit;
 }
 
 
-#navtable #left .xref:before {
+
+#left a.xref:before {
   content: "← ";
 }
 
-#navtable #right .xref:after {
+#right a.xref:after {
   content: " →";
 }
 
-#navtable {
-  margin: 0;
-  height: 100%;
-  width: ◊|content-width|;
-}
-
-#navtable td {
-  vertical-align: top; ◊; otherwise vertical centering happens
-  padding: 0; ◊; to allow links to fill whole td
-}
-
-#navtable a.xref {
+#bottom a.xref {
   display: block;
+  text-align: center;
   box-sizing: content-box; ◊; must override border-box setting here
-  padding: 0.3rem;
+  padding: 0.4rem;
   padding-bottom: 0.6rem;
-  height: 100%;
+  height: 2rem;
   background: none;
   color: black;
   line-height: 1.1;
   font-size: 85%;
   opacity: 0.5; ◊; this works better than straight gray, which Webkit renders heavy
-}
-
-#navtable a.xref:hover {
-      opacity: 1;
-}
-
-#navtable td:hover, #tfl-fonts-nav tr + tr td:hover {
-      ◊make-css-background-gradient[`("#ffffff" ,anchor-hover-color) '("17%" "100%") #:radial #t]
-}
-
-#navtable a.xref, #navtable a.xref:hover {
   transition: opacity 0.2s;
 }
 
+#bottom .span {
+  display: inline-block,
+  width: 12%;
+}
+
+#bottom span + span {
+  border-left: 1px solid gray;
+}
+
+#bottom #left,
+#bottom #right {
+  width: 32%;
+}
+
+#bottom a.xref:hover {
+      opacity: 1;
+}
+
+#bottom a.xref:hover, 
+#tfl-fonts-nav tr + tr td:hover {
+      ◊make-css-background-gradient[`("#ffffff" ,anchor-hover-color) '("17%" "100%") #:radial #t]
+}
 
 div.pdf-thumbnail {
   font-family: "concourse-c6";
@@ -758,16 +773,6 @@ width: ◊|nav-width|;
 }
 
 
-#bottom .nav-inner {
-left: ◊|body-left-margin|;
-right: ◊|default-margin|;
-max-width:1000px; ◊; same as body
-min-width:520px; ◊; same as body
-}
-
-#bottom a {
-  border-bottom: inherit;
-}
 
 
 

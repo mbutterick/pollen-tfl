@@ -136,15 +136,14 @@ document.write('<link rel="stylesheet" type="text/css" media="all" href="/firefo
       ◊if[(not toolbar?) ""]{
         ◊div[#:class "nav-outer" #:id "bottom"]{
             ◊div[#:class "nav-inner"]{
-              ◊table[#:id "navtable"]{
-                ◊tr{
-                  ◊td{◊xref["/index.html"]{TFL home}}
-                  ◊td{◊xref["/toc.html"]{Read excerpts}}
-                  ◊td{◊xref[buy-url]{get the book}}}}}}}})
+                  ◊span[#:style "width:33%"]{◊xref["/index.html"]{TFL home}}
+                  ◊span[#:style "width:34%"]{◊xref["/toc.html"]{Read excerpts}}
+                  ◊span[#:style "width:33%"]{◊xref[buy-url]{get the book}}}}}})
 
 
 ◊(define (default-body)
     ◊body{  ◊; use this body for all other pages
+      ◊div[#:id "top-stripe"]{}
       ◊div[#:id "content"]{
         ◊doc
         ◊(gap 1)
@@ -158,15 +157,13 @@ document.write('<link rel="stylesheet" type="text/css" media="all" href="/firefo
         (empty-string)
         ◊div[#:class "nav-outer" #:id "bottom"]{
             ◊div[#:class "nav-inner"]{
-              ◊table[#:id "navtable"]{
-                ◊tr{
-                  ◊(if (eq? here 'toc.html)
-                    (empty-string)
-                    ◊td[#:id "left" #:style (format "width: ~a%" side-cell-width)]{◊xref{◊(select 'title previous-page)}})
-                  ◊td[#:style "width:10%"]{◊xref["/index.html"]{TFL home}}
-                  ◊td[#:style (format "width:~a%" center-cell-width)]{◊xref[buy-url]{get the book}}
-                  ◊td[#:style (format "width:~a%" center-cell-width)]{◊xref["/fonts.html"]{get the fonts}}
-                  ◊(if next-page ◊td[#:id "right" #:style (format "width: ~a%" side-cell-width)]{◊xref{◊(select 'title next-page)}} "")}}}})})
+                  ◊span[#:id "left"]{◊(if (eq? here 'toc.html)
+                    ◊xref["index.html"]{home} 
+                    ◊xref{◊(select 'title previous-page)})}
+                    ◊span{◊xref["/index.html"]{TFL home}}
+                    ◊span{◊xref[buy-url]{get the book}}
+                    ◊span{◊xref["/fonts.html"]{get the fonts}}
+                    ◊(if next-page ◊span[#:id "right"]{◊xref{◊(select 'title next-page)}} "")}})})
 
 ◊(->html
     (body 
@@ -176,4 +173,4 @@ document.write('<link rel="stylesheet" type="text/css" media="all" href="/firefo
                       
 
 </html>
-<!-- © 2015 Matthew Butterick · website made with Pollen (pollenpub.com) -->
+<!-- © 2008–2017 Matthew Butterick · website made with Pollen (pollenpub.com) -->
