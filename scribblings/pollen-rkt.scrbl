@@ -537,18 +537,19 @@ Well, almost. One wrinkle that arises is connecting singular and plural versions
 
 
 @chunk[<target->url>
-         (define (format-as-filename target)
-           (define nonbreaking-space (string #\u00A0))
-           (let* ([x target]
-                  [x (string-trim x "?")] ; delete a question mark at the end
-                  [x (string-downcase x)] ; put string in all lowercase
-                  [x (regexp-replace* #rx"é" x "e")] ; remove accented é
-                  [x (if (regexp-match "times new roman" x) "a-brief-history-of-times-new-roman" x)] ; special rule for TNR
-                  [x (if (regexp-match "foreword" x) "foreword" x)] ; special rule for foreword
-                  [x (if (regexp-match "table of contents" x) "toc" x)] ; special rule for toc
-                  [x (string-replace x nonbreaking-space "-")] ; replace nbsp with hyphen
-                  [x (string-replace x " " "-")]) ; replace word space with hyphen
-             (format "~a.html" x)))
+       (define (format-as-filename target)
+         (define nonbreaking-space (string #\u00A0))
+         (let* ([x target]
+                [x (string-trim x "?")] ; delete a question mark at the end
+                [x (string-downcase x)] ; put string in all lowercase
+                [x (regexp-replace* #rx"é" x "e")] ; remove accented é
+                [x (if (regexp-match "times new roman" x) "a-brief-history-of-times-new-roman" x)] ; special rule for TNR
+                [x (if (regexp-match "about the author" x) "about" x)] ; special rule for about
+                [x (if (regexp-match "foreword" x) "foreword" x)] ; special rule for foreword
+                [x (if (regexp-match "table of contents" x) "toc" x)] ; special rule for toc
+                [x (string-replace x nonbreaking-space "-")] ; replace nbsp with hyphen
+                [x (string-replace x " " "-")]) ; replace word space with hyphen
+           (format "~a.html" x)))
 
        (define (target->url target)         
          (define actual-filenames
@@ -557,10 +558,11 @@ Well, almost. One wrinkle that arises is connecting singular and plural versions
                                         [singular-target (regexp-replace plural-regex target "")]
                                         [plural-target (string-append singular-target "s")])
                                    (list singular-target plural-target)))
-         (for*/first ([tfn (in-list (map format-as-filename target-variants))]
-                      [afn (in-list actual-filenames)]
-                      #:when (equal? tfn afn))
-                     tfn))]
+         (or (for*/first ([tfn (in-list (map format-as-filename target-variants))]
+                          [afn (in-list actual-filenames)]
+                          #:when (equal? tfn afn))
+                         tfn)
+             (error (format "no URL found for ~a" target))))]
 
 
 @defproc[

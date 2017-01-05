@@ -15,7 +15,7 @@ I live in Los Angeles with my wife Jessica and Roxy the boxer.
 You can reach me at ◊link["mailto:mb@typographyforlawyers.com"]{mb@typographyforlawyers.com}. I welcome comments and corrections. I do not, however, dispense individualized critiques or recommendations. Nor do I have Word templates to give away. After all, the point of the book is for you to learn how to do these things yourself.
 
 
-◊em{Typography for Lawyers} is © 2008–16 Matthew Butterick. All rights reserved.
+◊em{Typography for Lawyers} is © 2008–17 Matthew Butterick. All rights reserved.
 
 ◊gap[5]
 
