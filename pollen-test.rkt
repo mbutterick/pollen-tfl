@@ -142,19 +142,19 @@ will be combined into a single submodule.
 
 
 (module+ test
-  (check-txexprs-equal? ◊xref{target}
-                        `(a ((class "xref") (href "target.html") ,no-hyphens-attr) "target"))
-  (check-txexprs-equal? ◊xref["url"]{target}
-                        `(a ((class "xref") (href "url") ,no-hyphens-attr) "target"))
-  (check-exn exn:fail:contract:arity? (λ _ (xref "url" "target" "spurious-third-argument"))))
+  (check-txexprs-equal? ◊xref{word space}
+                        `(a ((class "xref") (href "word-spaces.html") ,no-hyphens-attr) "word space"))
+  (check-txexprs-equal? ◊xref["word-spaces.html"]{target}
+                        `(a ((class "xref") (href "word-spaces.html") ,no-hyphens-attr) "target"))
+  (check-exn exn:fail:contract:arity? (λ _ (xref "word-spaces.html" "target" "spurious-third-argument"))))
 
 (module+ test
-  (check-equal? (target->url "foo?") "foo.html")
-  (check-equal? (target->url "FOO") "foo.html")
-  (check-equal? (target->url "foé") "foe.html")
+  (check-equal? (target->url "word space") "word-spaces.html")
+  (check-equal? (target->url "WORD SPACE") "word-spaces.html")
+  (check-equal? (target->url "word spacé") "word-spaces.html")
   (check-equal? (target->url "Foreword Lengthy Title") "foreword.html")
   (check-equal? (target->url "Table of Contents and Other Nonsense") "toc.html")
-  (check-equal? (target->url "Nonbreaking Space and Spaces") "nonbreaking-space-and-spaces.html"))
+  (check-equal? (target->url "Word Spaces") "word-spaces.html"))
 
 
 (module+ test

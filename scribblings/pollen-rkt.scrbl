@@ -562,7 +562,7 @@ Well, almost. One wrinkle that arises is connecting singular and plural versions
                           [afn (in-list actual-filenames)]
                           #:when (equal? tfn afn))
                          tfn)
-             (error (format "no URL found for ~a" target))))]
+             (error (format "no URL found for ~v" target))))]
 
 
 @defproc[
