@@ -21,6 +21,6 @@ I could tell you that in the second paragraph, the extra spaces disrupt the bala
 
 ◊(omission)
 
-I have no idea why so many writers resist the one-space rule. If you’re skeptical, pick up any book, newspaper, or magazine and tell me how many spaces there are between sentences
+I have no idea why so many writers resist the one-space rule. If you’re skeptical, pick up any book, newspaper, or magazine and tell me how many spaces there are between sentences.
 
 Correct — one.
