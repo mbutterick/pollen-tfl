@@ -23,7 +23,7 @@ Professional fonts are also a great value. Yes, they cost money. But you can get
 
 ◊btw{
 
-Most professional fonts are delivered in OpenType format (.otf extension). Some are offered in the older TrueType format (.ttf ). OpenType and TrueType files can be used on either Windows or OS X, so the technological distinctions are largely moot. One notable exception: Microsoft Office on Windows, for various historical reasons, still does better with TrueType fonts. So if you’re getting a professional font to use with Office, be sure to get the TrueType versions.
+Most professional fonts are delivered in OpenType format (.otf extension). Some are offered in the older TrueType format (.ttf ). OpenType and TrueType files can be used on either Windows or Mac OS, so the technological distinctions are largely moot. One notable exception: Microsoft Office on Windows, for various historical reasons, still does better with TrueType fonts. So if you’re getting a professional font to use with Office, be sure to get the TrueType versions.
 
 
 What’s the difference between a font and a typeface? Historically, ◊em{typeface} referred to the overall family (e.g., Baskerville) and ◊em{font} referred to a specific instance of the family (e.g., 10-point Baskerville bold italic). This distinction made sense in the letterpress age, when each font corresponded to a case of metal type. But as Bryan Garner has pointed out, “[t]echnology has changed the meaning of this term ... font most often denotes a whole family of styles that can be printed at almost any size.” (◊em{Garner’s Modern American Usage}, 3rd ed., page 364.) Internet pedants may carp, but it’s fine to use ◊em{font} to mean both the family and a specific style. I do.    

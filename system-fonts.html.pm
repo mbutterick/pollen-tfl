@@ -8,7 +8,7 @@ As professional writers, lawyers ought to rely on professional fonts. They’re 
 But professional fonts aren’t always an option. Certain projects demand ◊em{system fonts}, which are the fonts already installed on your computer. In printed documents, they present three problems.
 
 ◊numbered-list{
-◊em{Many system fonts aren’t good}. The Windows and OS X libraries have improved, but they’re still minefields of awful fonts. I won’t name names, but my least favorite rhymes with Barial.
+◊em{Many system fonts aren’t good}. The Windows and Mac OS libraries have improved, but they’re still minefields of awful fonts. I won’t name names, but my least favorite rhymes with Barial.
 
 
 ◊margin-note{Moreover, fonts 

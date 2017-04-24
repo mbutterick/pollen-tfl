@@ -14,7 +14,7 @@ The right way: “print” the document directly to PDF.
 
 ◊os{Windows} Install a printer driver that outputs PDFs instead of sending a file to a physical printer. If you have a commercial version of Adobe Acrobat (not just the free Acrobat Reader), the ‹Adobe PDF› driver should already be installed. If you don’t have Adobe Acrobat, numerous third-party PDF printer drivers are available. When you issue the print command, you’ll see the ‹Print› dialog box. At the top of this box is a popup menu listing the installed printers. Select your PDF printer. Set other options as needed and click ‹OK›.
 
-◊os{OS X} You don’t need a special print driver — printing directly to PDF is built into OS X. Issue the ‹Print› command. The dialog box that appears has a button at the lower left labeled ‹PDF›. Click this button. From the menu that appears, select ‹Save as PDF›. In the next dialog box, enter a filename and click ‹Save›.
+◊os{Mac OS} You don’t need a special print driver — printing directly to PDF is built into Mac OS. Issue the ‹Print› command. The dialog box that appears has a button at the lower left labeled ‹PDF›. Click this button. From the menu that appears, select ‹Save as PDF›. In the next dialog box, enter a filename and click ‹Save›.
 
 “What’s the difference? Either way, you end up with a PDF.” True. But one PDF is much better than the other.
 

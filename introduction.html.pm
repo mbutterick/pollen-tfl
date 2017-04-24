@@ -52,7 +52,7 @@ Regardless of the path you take, don’t just read the rules. Practice. Find typ
 
 The typographic rules in this book aren’t limited to particular software. You can apply them in just about any typesetting program.
 
-I’ve included specific tips for five common word processors: Microsoft Word 2010 and 2013 (for Windows); Microsoft Word 2011 and 2016 (for OS X); and Corel WordPerfect X7 (for Windows). Tips for Word apply to all versions unless specified.
+I’ve included specific tips for five common word processors: Microsoft Word 2010 and 2013 (for Windows); Microsoft Word 2011 and 2016 (for Mac OS); and Corel WordPerfect X7 (for Windows). Tips for Word apply to all versions unless specified.
 
 But the focus of this book is typography. It’s not intended to replace your software manual or help file. I’ve skipped technical issues that are especially basic (e.g., how to apply ◊xref{bold or italic} formatting) or especially complicated (e.g., how to implement ◊xref{paragraph and character styles}).
 

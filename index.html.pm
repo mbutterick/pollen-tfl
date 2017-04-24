@@ -15,7 +15,7 @@ available now}
 New ◊xref{sample documents} include ◊xref{presentations}, ◊xref{contracts}, ◊xref{grids of numbers}, and ◊xref{court opinions}.
 
 
-Technical tips have been updated to cover the newest versions of Word and WordPerfect on Windows, and Word on OS X
+Technical tips have been updated to cover the newest versions of Word and WordPerfect on Windows, and Word on Mac OS
 
 
 New essays on font copyrights, screen-reading considerations, and typographic disputes in the courts
