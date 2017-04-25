@@ -24,3 +24,5 @@ scribblings/*.js
 scribblings/*.css
 !scribblings/mb.css
 scribblings/*.html
+fontrec/*.gif
+styles.css
