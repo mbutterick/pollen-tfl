@@ -163,7 +163,7 @@ document.write('<link rel="stylesheet" type="text/css" media="all" href="/firefo
                     ◊span{◊xref["/index.html"]{TFL home}}
                     ◊span{◊xref[buy-url]{get the book}}
                     ◊span{◊xref["/fonts.html"]{get the fonts}}
-                    ◊(if next-page ◊span[#:id "right"]{◊xref{◊(select 'title next-page)}} "")}})})
+                    ◊span[#:id "right"]{◊(if next-page ◊xref{◊(select 'title next-page)} ◊xref["https://www.google.com/search?q=boxer+puppies&safe=off&tbm=isch"]{boxer puppies})}}})})
 
 ◊(->html
     (body 
