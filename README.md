@@ -1,4 +1,4 @@
-## © 2008–16 Matthew Butterick
+## © 2008–17 Matthew Butterick
 
 This is the source code for the Typography for Lawyers [web-based book](http://typographyforlawyers.com), which is an abbreviated version of the [paperback](http://typo.la/oc).
 
@@ -23,7 +23,7 @@ Scribble documentation is provided for the main `pollen.rkt` file. (Search for t
 
 Other source files contain comments.
 
-You can also read the docs [online, right now.](http://pkg-build.racket-lang.org/doc/pollen-tfl/)
+You can also read the docs [online, right now.](http://docs.racket-lang.org/pollen-tfl/)
 
 
 ## But this repo is not open source
