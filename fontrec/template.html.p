@@ -6,6 +6,7 @@
     <meta charset="UTF-8" />
     <title>◊|here-title| | Typography for Lawyers</title>
     <link rel="stylesheet" type="text/css" media="all" href="/styles.css" />
+    <link rel="stylesheet" type="text/css" media="all" href="/fonts/non-equity.css" />
 </head>
 
 
