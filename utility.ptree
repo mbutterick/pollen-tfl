@@ -2,6 +2,7 @@
 ◊(require sugar/coerce sugar/unstable/string sugar/file)
 
 error.html
+web-code.html
 
 fonts/equity-a.css
 fonts/equity-b.css

@@ -72,6 +72,14 @@ document.write('<link rel="stylesheet" type="text/css" media="all" href="/firefo
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
 
+
+  function jumpToCode() {
+    code_value = document.forms['codeform'].elements['codefield'].value;
+    window.location.href = "http://typo.la/" + code_value;
+    return false;
+  }
+
+
 </script>
 
 
