@@ -42,7 +42,7 @@
   (dict-ref (sku-variant-ids sku) which))
 
 (define (make-buy-url sku which)
-  (format "bc.html?item=~a" (get-variant-id sku which)))
+  (format "http://typo.la/bc.html?item=~a" (get-variant-id sku which)))
 
 
 (define (grid->table grid)
