@@ -73,7 +73,7 @@
   (require rackunit)
   (check-equal?
    (textify
- '(span (a ((href "equity.html")) "Equity") " + " (a ((href "concourse.html")) "Concourse Standard") " + " (a ((href "triplicate.html")) "Triplicate")))
+    '(span (a ((href "equity.html")) "Equity") " + " (a ((href "concourse.html")) "Concourse Standard") " + " (a ((href "triplicate.html")) "Triplicate")))
    "Equity + Concourse Standard + Triplicate"))
 
 (define (buy-link sku people)
@@ -84,7 +84,9 @@
        (item ,item)
        (label ,(format "~a (~a-person license)" item people))
        (quantity ,(number->string people))
-       (amount ,(number->string price)))
+       (amount ,(number->string price))
+       (success "/order-success.html")
+       (failure "/order-failure.html"))
       ,(format "$~a" price)))
 
 (define (make-buy-grid #:people people-list #:skus sku-list)
