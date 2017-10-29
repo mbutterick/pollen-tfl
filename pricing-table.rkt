@@ -41,9 +41,6 @@
 (define (get-variant-id sku which)
   (dict-ref (sku-variant-ids sku) which))
 
-(define (make-buy-url sku which)
-  (format "http://typo.la/bc.html?item=~a" (get-variant-id sku which)))
-
 
 (define (grid->table grid)
   (define (table-row row [cell-tag 'td])
@@ -52,8 +49,8 @@
     (table-row row 'th))
   
   `(table ((class "buy-table"))
-    ,(table-header (car grid))
-    ,@(map table-row (cdr grid))))
+          ,(table-header (car grid))
+          ,@(map table-row (cdr grid))))
 
 (define (people->string p)
   (define p-string (format "~a"
@@ -62,11 +59,39 @@
                                p)))
   (string-append p-string " " (if (= p 1) "person" "people")))
 
+(require txexpr racket/string)
+(define (textify x)
+  (cond
+    ;; convert nbsp to string
+    [(string? x) (string-replace x #px"[\\s#\u00A0]+" " ")]
+    [(eq? 'nbsp x) " "]
+    [(list? x) (string-append* (map textify (if (txexpr? x)
+                                                (get-elements x)
+                                                x)))]))
+
+(module+ test
+  (require rackunit)
+  (check-equal?
+   (textify
+ '(span (a ((href "equity.html")) "Equity") " + " (a ((href "concourse.html")) "Concourse Standard") " + " (a ((href "triplicate.html")) "Triplicate")))
+   "Equity + Concourse Standard + Triplicate"))
+
+(define (buy-link sku people)
+  (define price (get-price sku people))
+  (define item (textify (sku-name sku)))
+  `(a ((class "checkout_clicker")
+       (href "#")
+       (item ,item)
+       (label ,(format "~a (~a-person license)" item people))
+       (quantity ,(number->string people))
+       (amount ,(number->string price)))
+      ,(format "$~a" price)))
+
 (define (make-buy-grid #:people people-list #:skus sku-list)
   (cons 
    (cons "" (map people->string people-list)) 
    (map (λ(sku) (cons (sku-name sku) 
-                      (map (λ(p) `(a ((href ,(make-buy-url sku p))) ,(format "$~a" (get-price sku p)))) people-list))) sku-list)))
+                      (map (λ(p) (buy-link sku p)) people-list))) sku-list)))
 
 
 (define (make-buy-table #:people people-list #:skus sku-list)

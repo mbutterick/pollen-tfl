@@ -81,7 +81,10 @@ document.write('<link rel="stylesheet" type="text/css" media="all" href="/firefo
 
 
 </script>
-
+◊(when/block (hash-ref metas 'tfl-font-template #f)
+    ◊string-append{
+<script src="https://checkout.stripe.com/checkout.js"></script>
+<script src="https://mbtype.com/core/checkout.js"></script>})
 
 </head>
 
