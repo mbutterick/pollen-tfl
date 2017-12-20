@@ -28,12 +28,12 @@ equity-concourse-triplicate
 equity-concourse-triplicate-advocate)]
 
 
-◊font-details{Triplicate includes 96 font files:
+◊font-details{Triplicate includes 144 font files:
 = 3 weights (light, book, bold)
 × 3 series (roman, italic, caps)
 + 3 cloned styles
 × 4 variants (regular, code, poly, short)
-× 2 file formats (OpenType, and TrueType-compatible OpenType TT)
+× 3 file formats (OpenType, TrueType-compatible OpenType TT, and WOFF)
 
 Read the ◊link["http://mbtype.com/license"]{font license} (it’s short) or the ◊link["http://mbtype.com/faq"]{FAQ}
 For details on character set and OpenType features, see the ◊link["http://typo.la/trts"]{PDF specimen}

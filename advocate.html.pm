@@ -29,13 +29,13 @@ advocate
 equity-concourse-triplicate-advocate)]
 
 
-◊font-details{Advocate includes 180 font files:
+◊font-details{Advocate includes 270 font files:
 = 3 weights (regular, medium, bold)
 × 3 widths (narrow, regular, wide)
 × 2 series (sans, slab)
 + 12 cloned styles
 × 3 stylistic variants (normal, tab, mid)
-× 2 file formats (OpenType, and TrueType-compatible OpenType TT)
+× 3 file formats (OpenType, TrueType-compatible OpenType TT, and WOFF)
 
 Read the ◊link["http://mbtype.com/license"]{font license} (it’s short) or the ◊link["http://mbtype.com/faq"]{FAQ}
 For more than five people, email ◊link["mailto:mb@mbtype.com"]{mb@mbtype.com}}

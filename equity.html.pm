@@ -29,11 +29,11 @@ equity-concourse-triplicate-advocate)]
 
 
 
-◊font-details{Equity includes 48 font files:
+◊font-details{Equity includes 72 font files:
 = 6 styles (regular, italic, bold, bold italic, regular caps, bold caps)
 × 2 weight grades (A and B)
 × 2 variants (regular and Tab, with tabular figures as the defaults)
-× 2 file formats (OpenType, and TrueType-compatible OpenType TT)
+× 3 file formats (OpenType, TrueType-compatible OpenType TT, and WOFF)
 
 Read the ◊link["http://mbtype.com/license"]{font license} (it’s short) or the ◊link["http://mbtype.com/faq"]{FAQ}
 For details on character set and OpenType features, see the ◊link["http://typo.la/eqts"]{PDF specimen}
