@@ -3,6 +3,8 @@
 
 error.html
 web-code.html
+order-success.html
+order-failure.html
 
 fonts/equity-a.css
 fonts/equity-b.css
