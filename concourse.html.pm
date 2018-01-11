@@ -10,8 +10,7 @@
 
 ◊link["http://typo.la/cots" #:class 'buylink]{PDF specimen}
 
-◊link["http://concoursefont.com" #:class 'buylink]{web specimen}
-
+◊link["https://mbtype.com/fonts/concourse/" #:class 'buylink]{Web demo}
 }}
 
 
@@ -47,8 +46,9 @@ Concourse Basic includes 72 font files:
 × 3 file formats (OpenType, OpenType TT, and WOFF)
 
 Read the ◊link["http://mbtype.com/license"]{font license} (it’s short) or the ◊link["http://mbtype.com/faq"]{FAQ}
-For details on character set and OpenType features, see the ◊link["http://typo.la/cots"]{PDF specimen}
-For more than five people, email ◊link["mailto:mb@mbtype.com"]{mb@mbtype.com}}
+For details on character set and OpenType features, visit ◊link["https://mbtype.com/fonts/concourse/"]{MB Type}
+For more than five people, visit ◊link["https://mbtype.com/fonts/concourse/buy.html"]{MB Type}
+}
 
 
 ◊numbered-list{

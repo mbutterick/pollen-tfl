@@ -10,6 +10,7 @@
 
 ◊link["http://typo.la/ats" #:class 'buylink]{PDF specimen}
 
+◊link["https://mbtype.com/fonts/advocate/" #:class 'buylink]{Web demo}
 
 }}
 
@@ -38,7 +39,9 @@ equity-concourse-triplicate-advocate)]
 × 3 file formats (OpenType, TrueType-compatible OpenType TT, and WOFF)
 
 Read the ◊link["http://mbtype.com/license"]{font license} (it’s short) or the ◊link["http://mbtype.com/faq"]{FAQ}
-For more than five people, email ◊link["mailto:mb@mbtype.com"]{mb@mbtype.com}}
+For details on character set and OpenType features, visit ◊link["https://mbtype.com/fonts/advocate/"]{MB Type}
+For more than five people, visit ◊link["https://mbtype.com/fonts/advocate/buy.html"]{MB Type}
+}
 
 
 ◊numbered-list{

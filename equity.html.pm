@@ -9,6 +9,8 @@
 ◊link["http://typo.la/eqts" #:class 'pdf]{◊image{equity-type-specimen.png}}
 
 ◊link["http://typo.la/eqts" #:class 'buylink]{PDF specimen}
+
+◊link["https://mbtype.com/fonts/equity/" #:class 'buylink]{Web demo}
 }}
 
 
@@ -35,9 +37,10 @@ equity-concourse-triplicate-advocate)]
 × 2 variants (regular and Tab, with tabular figures as the defaults)
 × 3 file formats (OpenType, TrueType-compatible OpenType TT, and WOFF)
 
-Read the ◊link["http://mbtype.com/license"]{font license} (it’s short) or the ◊link["http://mbtype.com/faq"]{FAQ}
-For details on character set and OpenType features, see the ◊link["http://typo.la/eqts"]{PDF specimen}
-For more than five people, email ◊link["mailto:mb@mbtype.com"]{mb@mbtype.com}}
+Read the ◊link["https://mbtype.com/license"]{font license} (it’s short) or the ◊link["https://mbtype.com/faq"]{FAQ}
+For details on character set and OpenType features, visit ◊link["https://mbtype.com/fonts/equity/"]{MB Type}
+For more than five people, visit ◊link["https://mbtype.com/fonts/equity/buy.html"]{MB Type}
+}
 
 ◊numbered-list{
 A workhorse serif font for ◊xref{body text}.
