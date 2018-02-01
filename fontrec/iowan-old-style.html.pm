@@ -4,4 +4,4 @@
 
 ◊(pdf-thumbnail-link-from-metas metas)
 
-◊buylink["https://www.myfonts.com/fonts/bitstream/iowan-old-style/"]{MyFonts}
+◊buylink["http://www.identifont.com/find?font=iowan+old+style"]{Font information}

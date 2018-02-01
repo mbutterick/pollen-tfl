@@ -4,4 +4,4 @@
 
 ◊(pdf-thumbnail-link-from-metas metas)
 
-◊buylink["https://www.myfonts.com/fonts/linotype/palatino-nova/"]{MyFonts}
+◊buylink["http://www.identifont.com/find?font=palatino+nova"]{Font information}

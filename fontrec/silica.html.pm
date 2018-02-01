@@ -4,4 +4,4 @@
 
 ◊(pdf-thumbnail-link-from-metas metas)
 
-◊buylink["http://www.myfonts.com/fonts/stone/silica/"]{MyFonts}
+◊buylink["http://www.stonetypefoundry.com/silicafamilygall.html"]{Stone Type Foundry}
