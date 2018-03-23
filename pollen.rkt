@@ -1,5 +1,5 @@
-#lang racket/base
-(require "scribblings/pollen-rkt.scrbl")
+#lang pollen/mode racket/base
+(require "scribblings/pollen-rkt.scrbl" pollen/tag)
 (provide (all-from-out "scribblings/pollen-rkt.scrbl"))
 
 (module setup racket/base
@@ -7,3 +7,10 @@
   (require pollen/setup racket/path)
   (define (omitted-path? p) (path-has-extension? p #"sh"))
   (define publish-directory "~/Dropbox/dropbox_xray/typographyforlawyers.com/public/"))
+
+(provide ie-payment-warning)
+(define (ie-payment-warning)
+  (define div (default-tag-function 'div))
+  (define p (default-tag-function 'p))
+  (define strong (default-tag-function 'strong))
+  ◊div[#:class "ie reader-note"]{◊p{Because of security considerations, my payment links ◊strong{do not support Internet Explorer 11 or earlier}. Please use a different browser.}})

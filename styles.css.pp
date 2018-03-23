@@ -442,7 +442,7 @@ margin-top: 0.1rem;
   text-transform: uppercase;
 }
 
-.font-details {
+.font-details, .reader-note {
   padding-top: 0.5rem;
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
@@ -785,5 +785,9 @@ a.pdf img:hover {
   background: #f6f6f6;
 }
 
+
+.ie {
+  display: none;
+}
 
 

@@ -57,6 +57,18 @@ var isFirefox = typeof InstallTrigger !== 'undefined';
 if (isFirefox) {
 document.write('<link rel="stylesheet" type="text/css" media="all" href="/firefox.css" />');
 }
+var maybe_ie_ua = window.navigator.userAgent;
+ // IE 10
+// maybe_ie_ua = 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.2; Trident/6.0)';
+
+// IE 11
+// maybe_ie_ua = 'Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko';
+
+// 'MSIE' key detects IE10 and before; 'Trident' key detects IE11
+if (maybe_ie_ua.indexOf('MSIE ') > 0 || maybe_ie_ua.indexOf('Trident/') > 0) {
+  document.write('<link rel="stylesheet" type="text/css" media="all" href="/ie.css" />');
+}
+
 </script>
 
 <script type="text/javascript">
