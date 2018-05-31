@@ -72,16 +72,16 @@ if (maybe_ie_ua.indexOf('MSIE ') > 0 || maybe_ie_ua.indexOf('Trident/') > 0) {
 </script>
 
 <script type="text/javascript">
-
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-19281911-1']);
-  _gaq.push(['_setDomainName', 'typographyforlawyers.com']);
-  _gaq.push(['_trackPageview']);
-
+  var clicky_custom = clicky_custom || {};
+  clicky_custom.cookies_disable = 1;
+  var clicky_site_ids = clicky_site_ids || [];
+  clicky_site_ids.push(101120957);
   (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    var s = document.createElement('script');
+    s.type = 'text/javascript';
+    s.async = true;
+    s.src = '//static.getclicky.com/js';
+    ( document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0] ).appendChild( s );
   })();
 
 
