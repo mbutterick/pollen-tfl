@@ -22,11 +22,9 @@ provide for the common Defense, promote the
 ◊strong{Liberty to ourselves and our Posterity.}
 If you like, you can edit this paragraph.}
 
-◊make-buy-table[#:people '(1 2 5) #:skus (list 
+◊make-buy-table[#:skus (list 
 equity 
-equity-concourse-basic 
-equity-concourse-standard 
-equity-concourse-triplicate
+equity-concourse
 equity-concourse-triplicate-advocate)]
 
 ◊(ie-payment-warning)

@@ -22,12 +22,9 @@ Excises, to pay the Debts and provide for the
 ◊em{◊strong{Excises shall be uniform throughout.}}
 If you like, you can edit this paragraph.}}
 
-◊make-buy-table[#:people '(1 2 5) #:skus (list 
-concourse-basic 
-concourse-standard 
-equity-concourse-basic 
-equity-concourse-standard 
-equity-concourse-triplicate
+◊make-buy-table[#:skus (list 
+concourse
+equity-concourse
 equity-concourse-triplicate-advocate)]
 
 ◊(ie-payment-warning)

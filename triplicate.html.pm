@@ -24,9 +24,8 @@ you can edit this paragraph.}}}
 
 
 
-◊make-buy-table[#:people '(1 2 5) #:skus (list 
+◊make-buy-table[#:skus (list 
 triplicate
-equity-concourse-triplicate
 equity-concourse-triplicate-advocate)]
 
 ◊(ie-payment-warning)

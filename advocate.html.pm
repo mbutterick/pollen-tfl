@@ -25,7 +25,7 @@ States. They shall in all Cases, except}
 
 
 
-◊make-buy-table[#:people '(1 2 5) #:skus (list 
+◊make-buy-table[#:skus (list 
 advocate
 equity-concourse-triplicate-advocate)]
 

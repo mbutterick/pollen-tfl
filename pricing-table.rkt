@@ -13,8 +13,7 @@
 (define (calc-multi-price base-price people)
   (round-cents 
    (sub1 (round-up 10 (case people
-                        [(1) base-price]
-                        [(2) (/ (* base-price 4) 3)]
+                        [(1 2) base-price]
                         [(5) (* base-price 2)]
                         [(10) (* base-price 3)]
                         [(20) (* base-price 4)]
@@ -41,6 +40,12 @@
 (define (get-variant-id sku which)
   (dict-ref (sku-variant-ids sku) which))
 
+(define (bc-url item-number)
+  (format "http://typo.la/bc.html?item=~a" item-number))
+
+(define (make-buy-url sku which)
+  (bc-url (get-variant-id sku which)))
+
 
 (define (grid->table grid)
   (define (table-row row [cell-tag 'td])
@@ -49,13 +54,13 @@
     (table-row row 'th))
   
   `(table ((class "buy-table"))
-          ,(table-header (car grid))
-          ,@(map table-row (cdr grid))))
+    ,(table-header (car grid))
+    ,@(map table-row (cdr grid))))
 
 (define (people->string p)
   (define p-string (format "~a"
-                           (if (< p 10)
-                               (list-ref '(zero one two three four five six seven eight nine) p)
+                           (if (<= p 10)
+                               (list-ref '(zero one two three four five six seven eight nine ten) p)
                                p)))
   (string-append p-string " " (if (= p 1) "person" "people")))
 
@@ -73,7 +78,7 @@
   (require rackunit)
   (check-equal?
    (textify
-    '(span (a ((href "equity.html")) "Equity") " + " (a ((href "concourse.html")) "Concourse Standard") " + " (a ((href "triplicate.html")) "Triplicate")))
+    '(span (a ((href "equity.html")) "Equity") " + " (a ((href "concourse.html")) "Concourse Standard") " + " (a ((href "triplicate.html")) "Triplicate")))
    "Equity + Concourse Standard + Triplicate"))
 
 (define (buy-link sku people)
@@ -96,5 +101,5 @@
                       (map (λ(p) (buy-link sku p)) people-list))) sku-list)))
 
 
-(define (make-buy-table #:people people-list #:skus sku-list)
+(define (make-buy-table #:people [people-list '(2 5 10)] #:skus sku-list)
   (grid->table (make-buy-grid #:people people-list #:skus sku-list)))
