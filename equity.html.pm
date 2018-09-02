@@ -37,7 +37,7 @@ equity-concourse-triplicate-advocate)]
 
 Read the ◊link["https://mbtype.com/license"]{font license} (it’s short) or the ◊link["https://mbtype.com/faq"]{FAQ}
 For details on character set and OpenType features, visit ◊link["https://mbtype.com/fonts/equity/"]{MB Type}
-For more than five people, visit ◊link["https://mbtype.com/fonts/equity/buy.html"]{MB Type}
+For more than ten people, visit ◊link["https://mbtype.com/fonts/equity/buy.html"]{MB Type}
 }
 
 ◊numbered-list{

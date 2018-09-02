@@ -29,23 +29,16 @@ equity-concourse-triplicate-advocate)]
 
 ◊(ie-payment-warning)
 
-◊font-details{Concourse Standard includes 162 font files:
+◊font-details{Concourse includes 162 font files:
 = 6 weights (light, book, medium, semibold, bold, black)
 × 3 series (roman, italic, and caps)
 + 9 cloned styles
 × 2 variants (regular and Tab, with tabular figures as the defaults)
 × 3 file formats (OpenType, TrueType-compatible OpenType TT, and WOFF)
 
-Concourse Basic includes 72 font files:
-= 3 weights (book, semibold, and bold)
-× 3 series (roman, italic, and caps)
-+ 3 cloned styles
-× 2 variants (regular and Tab)
-× 3 file formats (OpenType, OpenType TT, and WOFF)
-
-Read the ◊link["http://mbtype.com/license"]{font license} (it’s short) or the ◊link["http://mbtype.com/faq"]{FAQ}
+Read the ◊link["https://mbtype.com/license"]{font license} (it’s short) or the ◊link["https://mbtype.com/faq"]{FAQ}
 For details on character set and OpenType features, visit ◊link["https://mbtype.com/fonts/concourse/"]{MB Type}
-For more than five people, visit ◊link["https://mbtype.com/fonts/concourse/buy.html"]{MB Type}
+For more than ten people, visit ◊link["https://mbtype.com/fonts/concourse/buy.html"]{MB Type}
 }
 
 
