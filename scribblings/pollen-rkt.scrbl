@@ -442,9 +442,9 @@ One way to write this function is like so:
 
 @racketblock[
  (define (make-list-function tag [attrs empty])
-   (define (listifier . args)
-     (list* tag attrs (detect-list-items args))
-     listifier))]
+  (define (listifier . args)
+    (list* tag attrs (detect-list-items args)))
+  listifier)]
 
 That is, explicitly define a new function called @racket[listifier] and then return that function. That's the best way to do it in many programming languages.
 
