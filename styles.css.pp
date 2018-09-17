@@ -205,6 +205,7 @@ body {
   ◊(make-css-kerning)
   ◊(make-css-ligatures)
   color: #444;
+  -webkit-font-smoothing: subpixel-antialiased; /* corrects safari rendering */
 }
 
 ◊(define body-left-margin "11rem")
