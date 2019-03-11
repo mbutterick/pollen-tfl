@@ -411,7 +411,7 @@ Our list of elements could contain sequences like @racket['("\n" "\n" "\n")], wh
          (define li-tag (default-tag-function 'li))
          (map (λ(lip) (apply li-tag lip)) list-of-li-paragraphs))]
 
-@margin-note{Explicit type checking — e.g., @racket[(string? elem)] — is common in Racket. You can do ``duck typing'' (see @racket[with-handlers]) but it's not idiomatic. IMO this is wise — better to have an explicit, readable test (likse @racket[string?]) rather than an implicit, indirect one (``If the input isn't a @racket[string?], then a certain error will arise.'')}
+@margin-note{Explicit type checking — e.g., @racket[(string? elem)] — is common in Racket. You can do ``duck typing'' (see @racket[with-handlers]) but it's not idiomatic. IMO this is wise — better to have an explicit, readable test (like @racket[string?]) rather than an implicit, indirect one (``If the input isn't a @racket[string?], then a certain error will arise.'')}
 
 
 Because of the expression-based structure of Racket, it's often possible to write functions in an absurdly nested style. For instance, the last function could be written like so:
