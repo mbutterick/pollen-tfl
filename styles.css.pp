@@ -490,6 +490,7 @@ text-align: center;
 
 th {
 font-family: "concourse-c4";
+font-feature-settings: 'c2sc' 1;
 font-weight: normal;
 text-transform: lowercase;
 font-size: 85%;

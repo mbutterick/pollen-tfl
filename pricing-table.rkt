@@ -1,6 +1,9 @@
 #lang racket/base
-(require racket/dict "sku.rkt")
-(provide (all-defined-out) (all-from-out "sku.rkt"))
+(require racket/dict
+         racket/match
+         "sku.rkt")
+(provide (all-defined-out)
+         (all-from-out "sku.rkt"))
 
 
 (define (round-cents float)
@@ -54,15 +57,14 @@
     (table-row row 'th))
   
   `(table ((class "buy-table"))
-    ,(table-header (car grid))
-    ,@(map table-row (cdr grid))))
+          ,(table-header (car grid))
+          ,@(map table-row (cdr grid))))
 
 (define (people->string p)
-  (define p-string (format "~a"
-                           (if (<= p 10)
-                               (list-ref '(zero one two three four five six seven eight nine ten) p)
-                               p)))
-  (string-append "up to " p-string " " (if (= p 1) "person" "people")))
+  (string-append (match p
+                   [2 "1–2"]
+                   [5 "3–5"]
+                   [10 "6–10"]) " people"))
 
 (require txexpr racket/string)
 (define (textify x)
