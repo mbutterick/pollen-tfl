@@ -62,7 +62,7 @@
                            (if (<= p 10)
                                (list-ref '(zero one two three four five six seven eight nine ten) p)
                                p)))
-  (string-append p-string " " (if (= p 1) "person" "people")))
+  (string-append "up to " p-string " " (if (= p 1) "person" "people")))
 
 (require txexpr racket/string)
 (define (textify x)
