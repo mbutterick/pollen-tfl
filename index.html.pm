@@ -28,5 +28,3 @@ Refreshed layout, featuring four font families — ◊xref{Equity}, ◊xref{Con
 ◊home-link["toc.html"]{read excerpts}
 
 ◊home-link[buy-url]{get the book}
-
-◊home-link["fonts.html"]{get the fonts}

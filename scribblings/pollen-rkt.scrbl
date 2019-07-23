@@ -54,7 +54,7 @@ Other libraries we'll be using. @racketmodname[sugar] and @racketmodname[txexpr]
 
 @terminal{> raco pkg install hyphenate}
 
-@filepath{pricing-table.rkt} is another custom Racket file for this project. It's up to you whether you store all your functions and definitions in @filepath{pollen.rkt}, or spread them over different source files. Regardless of where you store them, @filepath{pollen.rkt} remains the central gathering point for everything you want to propagate to the @|lang| @racketmodname[pollen] source files in your project.
+It's up to you whether you store all your functions and definitions in @filepath{pollen.rkt}, or spread them over different source files. Regardless of where you store them, @filepath{pollen.rkt} remains the central gathering point for everything you want to propagate to the @|lang| @racketmodname[pollen] source files in your project.
 
 @margin-note{If you end up making reusable functions, you can share them between Pollen projects (and with other Racket users, if you want) by moving them into a @italic{package}.  For more, see @secref["how-to-create" #:doc '(lib "pkg/scribblings/pkg.scrbl")].}
 
@@ -66,8 +66,7 @@ Other libraries we'll be using. @racketmodname[sugar] and @racketmodname[txexpr]
          sugar
          txexpr
          hyphenate
-         pollen/unstable/typography
-         "../pricing-table.rkt")]
+         pollen/unstable/typography)]
 
 
 @section{Exports}
@@ -76,7 +75,7 @@ Note that @racket[all-defined-out] would only export the definitions that are cr
 imported definitions available too, we need to re-export them explicitly with @racket[all-from-out].
 
 @chunk[<provides>
-       (provide (all-defined-out) (all-from-out "../pricing-table.rkt"))
+       (provide (all-defined-out))
        ]
 
 

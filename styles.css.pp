@@ -654,6 +654,7 @@ margin-left: ◊(+ single-quote-width)em;
   transition: opacity 0.2s;
 }
 
+
 #bottom .span {
   display: inline-block,
   width: 12%;
@@ -665,7 +666,7 @@ margin-left: ◊(+ single-quote-width)em;
 
 #bottom #left,
 #bottom #right {
-  width: 32%;
+  width: 44%;
 }
 
 #bottom a.xref:hover {
