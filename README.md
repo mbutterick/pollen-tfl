@@ -1,6 +1,6 @@
-## © 2008–18 Matthew Butterick
+## © 2008–19 Matthew Butterick
 
-This is the source code for the Typography for Lawyers [web-based book](http://typographyforlawyers.com), which is an abbreviated version of the [paperback](http://typo.la/oc).
+This is the source code for an earlier version of the Typography for Lawyers [web-based book](http://typographyforlawyers.com), which is an abbreviated version of the [paperback](http://typo.la/oc).
 
 The website is built with [Pollen](http://pollenpub.com). I’m sharing this code as a Pollen sample project. Because when I’m trying to learn a new programming tool, I prefer to study real projects rather than synthetic examples.
 
