@@ -36,5 +36,6 @@ I also give you permission to reuse or adapt any of the Racket & Pollen source c
 
 I do **NOT** give you permission to reuse any of the content of this web-based book (including text, images, and PDFs), nor the fonts that are embedded in the CSS. Why not? Because that’s the stuff I sell for money so that I can keep [Pollen](http://pollenpub.com) itself under the LGPL. Let’s not mess with a good thing.
 
-If you have questions not covered here, please post them on the Pollen mailing list: http://groups.google.com/forum/#!forum/pollenpub
+If you have questions not covered here, please post them on `pollen-users`: 
+https://github.com/mbutterick/pollen-users/issues
 
