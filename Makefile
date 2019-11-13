@@ -1,11 +1,12 @@
 export POLLEN := BUILD
 .PHONY: build go clean clean-helper build-helper quick test
 
+build: test build-helper go
+
 go:
-	raco pollen render
+	raco pollen render -p
 	raco pollen publish
 
-build: test build-helper go
 
 clean-helper:
 	rm -rf ~/git/pollen-tfl/*
@@ -16,7 +17,7 @@ clean: clean-helper build
 
 build-helper:
 	raco pollen reset
-	raco pollen setup
+	raco pollen setup -p
 
 quick: go
 
