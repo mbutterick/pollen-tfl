@@ -5,7 +5,7 @@
 (module setup racket/base
   (provide (all-defined-out)) ;; <- don't forget this line in your config submodule!
   (require pollen/setup racket/path)
-  (define (omitted-path? p) (path-has-extension? p #"sh")))
+  (define (omitted-path? p) (path-has-extension? p #".sh")))
 
 (provide ie-payment-warning)
 (define (ie-payment-warning)
