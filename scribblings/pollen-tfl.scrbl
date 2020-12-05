@@ -4,7 +4,6 @@
 
 @author[(author+email "Matthew Butterick" "mb@mbtype.com")]
 
-@defmodule[pollen-tfl] 
 
 @local-table-of-contents[]
 
