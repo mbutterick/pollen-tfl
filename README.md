@@ -41,3 +41,7 @@ I do **NOT** give you permission to reuse any of the content of this web-based b
 If you have questions not covered here, please post them on `pollen-users`: 
 https://github.com/mbutterick/pollen-users/issues
 
+
+## Project status
+
+Complete. Maintained but no further updates planned.
