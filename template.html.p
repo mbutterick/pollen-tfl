@@ -25,21 +25,21 @@
     <script type="text/javascript">
 if (navigator.appVersion.indexOf("Win")!=-1) {
     ◊; got windows
-    document.write('<link rel="stylesheet" type="text/css" media="all" href="fonts/equity-a.css" />');
+    document.write('<link rel="stylesheet" type="text/css" media="all" href="fonts/source-serif-a.css" />');
 } else if (navigator.appVersion.indexOf("Mac")!=-1) {
     if (navigator.userAgent.match(/iPad/i) != null) {
         ◊; got ipad
         ◊; style sheet for ipad 2
-        document.write('<link rel="stylesheet" media="only screen and (max-device-width: 1024px)" href="fonts/equity-b.css" type="text/css" />');
+        document.write('<link rel="stylesheet" media="only screen and (max-device-width: 1024px)" href="fonts/source-serif-b.css" type="text/css" />');
         ◊; style sheet for ipad 3
-        document.write('<link rel="stylesheet" media="only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2)" type="text/css" href="fonts/equity-a.css" />');
+        document.write('<link rel="stylesheet" media="only screen and (min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-min-device-pixel-ratio: 2)" type="text/css" href="fonts/source-serif-a.css" />');
     } else {
         ◊; got mac
-        document.write('<link rel="stylesheet" type="text/css" media="all" href="fonts/equity-b.css" />');
+        document.write('<link rel="stylesheet" type="text/css" media="all" href="fonts/source-serif-b.css" />');
     }
 } else {
     ◊; got something else
-    document.write('<link rel="stylesheet" type="text/css" media="all" href="fonts/equity-a.css" />');
+    document.write('<link rel="stylesheet" type="text/css" media="all" href="fonts/source-serif-a.css" />');
 }
 
 </script>
@@ -47,9 +47,6 @@ if (navigator.appVersion.indexOf("Win")!=-1) {
   <title>◊(capitalize-first-letter here-title) | Typography for Lawyers</title>
   <link rel="stylesheet" type="text/css" media="all" href="/styles.css" />
   <link rel="stylesheet" type="text/css" media="all" href="/fonts/non-equity.css" />
-  ◊if[(not (select-from-metas 'tfl-font-template metas)) ""]{
-  <link rel="stylesheet" type="text/css" media="all" href="/fonts/advocate-extras.css" />
-  }
   <meta name="format-detection" content="telephone=no">
 
 <script type="text/javascript">

@@ -28,13 +28,15 @@ You can also read the docs [online, right now.](http://docs.racket-lang.org/poll
 
 ## But this repo is not open source
 
-Everything in this repository belongs to me and not you.
+This repo contains fonts licensed under the OFL (= Source Serif 4, Fira Sans, Fira Mono, and Cooper Hewitt).
+
+Everything else in this repository belongs to me and not you.
 
 I give you permission to use this repo to learn about Pollen, including running and modifying the files.
 
 I also give you permission to reuse or adapt any of the Racket & Pollen source code, or JavaScript / CSS / HTML, for your own Racket & Pollen projects.
 
-I do **NOT** give you permission to reuse any of the content of this web-based book (including text, images, and PDFs), nor the fonts that are embedded in the CSS. Why not? Because that’s the stuff I sell for money so that I can keep [Pollen](http://pollenpub.com) itself under the LGPL. Let’s not mess with a good thing.
+I do **NOT** give you permission to reuse any of the content of this web-based book (including text, images, and PDFs). Why not? Because that’s the stuff I sell for money so that I can keep [Pollen](http://pollenpub.com) itself free. Let’s not mess with a good thing.
 
 If you have questions not covered here, please post them on `pollen-users`: 
 https://github.com/mbutterick/pollen-users/issues

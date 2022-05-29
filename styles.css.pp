@@ -28,7 +28,7 @@ strong {
 
 h1, .home-link {
   text-transform: uppercase;
-  font-family: "advocate-c43";
+  font-family: "cooper-hewitt";
   font-size: 2rem;
   line-height: 1.1;
 }
@@ -81,7 +81,7 @@ h1, .home-link {
 
 .home-overlay-inner p {
   font-size: 85%;
-  font-family: "concourse-t3";
+  font-family: "fira-sans";
 }
 
 .toc h3 {
@@ -110,7 +110,7 @@ h1, .home-link {
 
 
 .chapter {
-  font-family: "advocate-c43";
+  font-family: "cooper-hewitt";
   text-transform: uppercase;
   letter-spacing: 0.07rem;
   margin-top: 2.5rem;
@@ -119,7 +119,7 @@ h1, .home-link {
 }
 
 .section {
-  font-family: "advocate-c43";
+  font-family: "cooper-hewitt";
   font-weight: normal;
   font-size: 170%;
   text-transform: uppercase;
@@ -131,12 +131,13 @@ h1, .home-link {
 
 .section + p:first-line {
   font-weight: bolder;
-  font-family: "equity-caps";
+  font-family: "source-serif";
+  font-variant-caps: all-small-caps;
   ◊(make-css-small-caps)
 }
 
 .font-headline {
-  font-family: "advocate-c43";
+  font-family: "cooper-hewitt";
   font-size: 180%;
   margin-bottom: 1rem;
   text-transform: uppercase;
@@ -161,7 +162,7 @@ h1, .home-link {
 .margin-note {
   font-size: 82%; 
   margin-bottom: 1rem; ◊; prevents two asides from adjacency 
-  font-family: "concourse-t3";
+  font-family: "fira-sans";
   line-height: 1.35;
   color: #666;
 }
@@ -182,7 +183,8 @@ h1, .home-link {
 }
 
 ~h2.section + p:first-line {
-  font-family: "equity-caps";
+  font-family: "source-serif";
+  font-variant-caps: all-small-caps;
   font-weight: bolder;
   text-transform: lowercase;
   ◊make-css-ot-features['("c2sc") '(1)]
@@ -227,7 +229,7 @@ margin-right: ◊|default-margin|;
 
 
 #doc {
-  font-family: "equity-text";
+  font-family: "source-serif";
 }
 
 h2 {
@@ -254,7 +256,8 @@ a, a:hover {
 }
 
 .xref {
-  font-family: "equity-caps";
+  font-family: "source-serif";
+  font-variant-caps: all-small-caps;
   ◊(make-css-small-caps)
 }
 
@@ -293,7 +296,9 @@ font-desc {
 }
 
 font-desc a.xref {
-  font-family: "concourse-c6";
+  font-family: "fira-sans";
+  font-variant-caps: all-small-caps;
+  font-weight: bolder;
 }
 
 ul.subnav {
@@ -320,7 +325,8 @@ table.captioned td {
 }
 
 .caption, .caption-runin {
-  font-family: "concourse-c4";
+  font-family: "fira-sans";
+  font-variant-caps: all-small-caps;
 }
 
 .caption-runin {
@@ -333,7 +339,9 @@ table.captioned td {
 }
 
 .os {
-  font-family: "concourse-c6";
+  font-family: "fira-sans";
+  font-variant-caps: all-small-caps;
+  font-weight: bolder;
   ◊(make-css-small-caps);
 }
 
@@ -345,7 +353,8 @@ sig {
   display: block;
   margin-top: 1.5rem;
   text-align: right;
-  font-family: "equity-caps";
+  font-family: "source-serif";
+  font-variant-caps: all-small-caps;
   ◊(make-css-small-caps)
 }
 
@@ -370,7 +379,7 @@ font-family: "concourse-t3-index"; ◊; changes font for list indexes
 }
 
 ol li p {
-  font-family: "equity-text"; ◊; changes font back for body of list item
+  font-family: "source-serif"; ◊; changes font back for body of list item
 }
 
 ul.btw {
@@ -380,7 +389,9 @@ ul.btw {
 #btw-title {
 display: block;
 text-align: center;
-font-family: "concourse-c6";
+font-family: "fira-sans";
+font-variant-caps: all-small-caps;
+font-weight: bolder;
 font-size: 80%;
 ◊(make-css-caps)
 font-weight: bolder;
@@ -410,7 +421,8 @@ margin-top: 0.1rem;
 
 
 .subhead {
-  font-family: "equity-caps";
+  font-family: "source-serif";
+  font-variant-caps: all-small-caps;
   font-weight: bolder;
   ◊(make-css-small-caps)
   margin-top: 1.2rem;
@@ -418,7 +430,7 @@ margin-top: 0.1rem;
 }
 
 .mono {
-  font-family: "triplicate-t4";
+  font-family: "fira-mono";
 }
 
 
@@ -433,7 +445,9 @@ margin-top: 0.1rem;
 
 .madlib {
   display: inline-block;
-  font-family: "concourse-c6";
+  font-family: "fira-sans";
+  font-variant-caps: all-small-caps;
+  font-weight: bolder;
   font-size: 50%; 
   font-weight: bolder;
   position: relative;
@@ -451,7 +465,7 @@ margin-top: 0.1rem;
   border-top: 1px solid gray;
   border-bottom: 1px solid gray;
   background: #f6f6f6;
-  font-family: "concourse-t3";
+  font-family: "fira-sans";
   line-height: 1.40;
 }
 
@@ -489,7 +503,8 @@ text-align: center;
 }
 
 th {
-font-family: "concourse-c4";
+font-family: "fira-sans";
+font-variant-caps: all-small-caps;
 font-feature-settings: 'c2sc' 1;
 font-weight: normal;
 text-transform: lowercase;
@@ -513,7 +528,7 @@ a.buylink, .buy-table td a {
     color: white;
     padding: 0.3em 0.5em 0.3em 0.5em;
     border-radius: 1em;
-    font-family: "concourse-t3";
+    font-family: "fira-sans";
     ◊(make-css-caps);   
     letter-spacing: 0.04rem;
     border: none;
@@ -534,7 +549,7 @@ a.buylink, .buy-table td a {
 }
 
 .font-sample h3 {
-    font-family: "advocate-c43";
+    font-family: "cooper-hewitt";
     font-size: 170%;
     font-weight: normal;
     text-transform: uppercase;
@@ -679,7 +694,9 @@ margin-left: ◊(+ single-quote-width)em;
 }
 
 div.pdf-thumbnail {
-  font-family: "concourse-c6";
+  font-family: "fira-sans";
+  font-variant-caps: all-small-caps;
+  font-weight: bolder;
   display: inline-block;
   width: 40%;
 }

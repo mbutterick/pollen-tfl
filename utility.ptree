@@ -6,10 +6,9 @@ web-code.html
 order-success.html
 order-failure.html
 
-fonts/equity-a.css
-fonts/equity-b.css
+fonts/source-serif-a.css
+fonts/source-serif-b.css
 fonts/non-equity.css
-fonts/advocate-extras.css
 
 firefox.css
 ie.css
