@@ -68,9 +68,6 @@ if (maybe_ie_ua.indexOf('MSIE ') > 0 || maybe_ie_ua.indexOf('Trident/') > 0) {
 
 </script>
 
-<script>var clicky_site_ids = clicky_site_ids || []; clicky_site_ids.push(101120957);</script>
-<script async src="//static.getclicky.com/js"></script>
-
 <script type="text/javascript">
   function jumpToCode() {
     code_value = document.forms['codeform'].elements['codefield'].value;
