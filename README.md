@@ -4,7 +4,7 @@ This is the source code for an earlier version of the Typography for Lawyers [we
 
 The website is built with [Pollen](http://pollenpub.com). I’m sharing this code as a Pollen sample project. Because when I’m trying to learn a new programming tool, I prefer to study real projects rather than synthetic examples.
 
-To run this project, you need to first install [Racket](https://github.com/racket/racket) and [Pollen](https://github.com/mbutterick/pollen).
+To run this project, you need to first install [Racket](https://github.com/racket/racket) and [Pollen](https://git.matthewbutterick.com/mbutterick/pollen).
 
 ## Installation
 
@@ -38,8 +38,7 @@ I also give you permission to reuse or adapt any of the Racket & Pollen source c
 
 I do **NOT** give you permission to reuse any of the content of this web-based book (including text, images, and PDFs). Why not? Because that’s the stuff I sell for money so that I can keep [Pollen](http://pollenpub.com) itself free. Let’s not mess with a good thing.
 
-If you have questions not covered here, please post them on `pollen-users`: 
-https://github.com/mbutterick/pollen-users/issues
+If you have questions not covered here, please post them in the Pollen forum: https://forums.matthewbutterick.com/c/pollen/
 
 
 ## Project status
